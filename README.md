@@ -2,7 +2,9 @@
 
 ## Overview
 
-The SimpleAnimation library is designed to make complex JavaScript animations, simple. It's syntax is inspired from TweenLite (as AS3 library), but that's where the similarity ends.
+The SimpleAnimation library is designed to make complex JavaScript animations, simple. It's syntax is inspired from TweenLite (an AS3 library), but that's where the similarity ends.
+
+Currently, the project is still in a very early beta state, but it has been used in commercial projects.
 
 The SimpleAnimation library is currently separated into 3 parts:
 
@@ -17,7 +19,7 @@ Below are descriptions of what each script does and some basic usage examples.
 SimpleSynchro is REQUIRED for any other script. It's the main timer for all animations and timelines. You don't need to initialise SimpleSynchro, it will initialise as soon as any tween or timeline is added to the page.
 
 ### usage
-	&lt;script type="text/javascript" src="libs/SimpleSynchro.js"&gt;
+	<script type="text/javascript" src="libs/SimpleSynchro.js">
 
 Just include it your page and you're done.
 
@@ -29,7 +31,7 @@ SimpleTween is the main script of the library. It's used to animate any enumerab
 
 To move an element with the id of 'sqA' left 100px in 2 seconds;
 
-	SimpleTween.to(document.getElementById('sqA'), 2, {left: 100);
+	SimpleTween.to(document.getElementById('sqA'), 2, {left: 100});
 
 Move an element with easing, delay and multiple callbacks. (See the demos for examples).
 
@@ -55,3 +57,29 @@ SimpleTimeline is used to sequence multiple SimpleTweens. With SimpleTimeline yo
 	timeline.addTween(tween1, 0);
 	timeline.addTween(tween2, 0);
 	timeline.addTween(tween3, 2);
+
+## Roadmap
+
+Below are proposed updates and changes to the library
+
++ Add a reverse method to SimpleTween and SimpleTimeline
++ Fix the opacity filter in IE
++ Add nested timelines
++ More advanced demos
+
+If you're interested in contributing, feel free to contact me: ntibbles@gmail.com
+
+## Licence
+
+This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
