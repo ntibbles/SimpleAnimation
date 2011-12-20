@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>index</title>
+		<meta name="description" content="" />
+		<meta name="author" content="ntibbl" />
+		<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<script type="text/javascript" src="libs/Easing.js"></script>
+		<script type="text/javascript" src="libs/Delegate.js"></script>
+		<script type="text/javascript" src="libs/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="libs/SimpleTween.js"></script>
+		<script type="text/javascript" src="libs/SimpleTimeline.js"></script>
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
+		<!-- <script type="text/javascript" src="libs/JSLitmus.js"></script> -->
+		<style>
+			input {
+				float: left;
+			}
+			#container {
+				width: 400px;
+				height: 400px;
+				position:relative;
+				border: 1px solid #000;
+				padding:10px;
+				overflow: hidden;
+			}
+			
+			#controls {
+				position: absolute;
+				top:440px;
+			}
+			.square {
+				top:10px;
+				left:10px;
+				width:25px;
+				height:25px;
+				border:1px solid #000;
+				position:absolute;
+				background-color:#0000FF;
+				margin-bottom:2px;
+				/*-webkit-transform:rotate(45deg);*/
+			}
+			
+			#status {
+				font: 82% Arial, sans-serif;
+				text-transform:capitalize;
+				padding-left:10px;
+				float:left;
+			}
+		</style>
+		
+	</head>
+	<body>
+		<div>
+			<div id="container">
+				<div id="sqA" class="square">&nbsp;</div>
+			</div>
+			<div id="controls">
+				<input type="button" onclick="tween1.start();" value="start()">
+				<input type="button" onclick="tween1.pause();" value="pause()">
+				<div id="status">stopped</div>
+			</div>
+		</div>
+		<script>
+			var tween1, cbHandler = {};
+			
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+			cbHandler.onComplete = handleTweenComplete;
+			cbHandler.onStart = handleTweenStart;
+			cbHandler.onStop = handleTweenStop;
+			cbHandler.onPause = handleTweenPause;
+			cbHandler.onResume = handleTweenResume;
+			
+			function handleTweenStart(evt) {
+				$("#status").html("started");
+			};
+			
+			function handleTweenStop(evt) {
+				$("#status").html("stopped");
+			};
+			
+			function handleTweenPause(evt) {
+				$("#status").html("paused");
+			};
+			
+			function handleTweenResume(evt) {
+				$("#status").html("resumed");
+			};
+			
+			function handleTweenComplete(evt) {
+				$("#status").html("completed");
+				//SimpleTween.to(evt.tween.target, 2, {top:30, left:30, width:350, height: 350}, {ease: Easing.strongEaseOut});
+			};
+			
+			function triggerHandler(evt) {
+				$("#status").html("triggered");
+			};
+			
+			SimpleTween.getTweenByUID(1);
+			
+		</script>
+	</body>
+</html>

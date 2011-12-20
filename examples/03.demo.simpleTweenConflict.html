@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>index</title>
+		<meta name="description" content="" />
+		<meta name="author" content="ntibbl" />
+		<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<script type="text/javascript" src="libs/Easing.js"></script>
+		<script type="text/javascript" src="libs/Delegate.js"></script>
+		<script type="text/javascript" src="libs/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="libs/SimpleTween.js"></script>
+		<script type="text/javascript" src="libs/SimpleTimeline.js"></script>
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
+		<!-- <script type="text/javascript" src="libs/JSLitmus.js"></script> -->
+		<style>
+			input {
+				float: left;
+			}
+			#container {
+				width: 400px;
+				height: 400px;
+				position:relative;
+				border: 1px solid #000;
+				padding:10px;
+				overflow: hidden;
+			}
+			
+			#controls {
+				position: absolute;
+				top:440px;
+			}
+			.square {
+				top:50px;
+				left:50px;
+				width:25px;
+				height:25px;
+				border:1px solid #000;
+				position:absolute;
+				background-color:#0000FF;
+				margin-bottom:2px;
+				/*-webkit-transform:rotate(45deg);*/
+				cursor:pointer;
+			}
+			
+			#status {
+				font: 82% Arial, sans-serif;
+				text-transform:capitalize;
+				padding-left:10px;
+				float:left;
+			}
+		</style>
+		
+	</head>
+	<body>
+		<div>
+			<div id="container">
+				<div id="sqA" class="square">&nbsp;</div>
+			</div>
+			<p>If the button is rolled off of before the tween completes, two conflicting tweens will be created. This demos the tween automatic overwritting.</p>
+		</div>
+		<script>
+			$("#sqA").mouseover(function(evt) {
+				SimpleTween.to($(this)[0], 1, {width:100, height:100}, {ease: Easing.strongEaseOut});
+			}).mouseout(function(evt) {
+				SimpleTween.to($(this)[0], 1, {width:25, height:25}, {ease: Easing.strongEaseOut});
+			});
+			
+			
+		</script>
+	</body>
+</html>
