@@ -3,6 +3,8 @@
 * A JavaScript solution to control a single
 * event and synchronize all listeners.
 * 
+* Version 0.4b
+* 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
 * This program is free software: you can redistribute it and/or modify
@@ -31,6 +33,8 @@
 	        return -1;
 	    }
 	}
+	
+	SimpleSynchro.VERSION = "0.4b";
 	
 	SimpleSynchro = function() {
 		throw "SimpleSynchro can not be instantiated.";
