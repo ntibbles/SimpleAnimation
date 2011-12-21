@@ -93,7 +93,6 @@
 		};
 		
 		this._getSuffix = function(prop) {
-			if (document.all) { alert("It's IE") }
 			return (prop !== "opacity") ? this._suffix : " ";
 		};
 		
