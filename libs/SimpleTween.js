@@ -7,6 +7,9 @@
 * 
 * Version 0.4b
 * 
+* useage:
+* SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+* 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -22,6 +25,10 @@
 **/
 
 (function(window, document, undefined){
+	/**
+	 * Checks if an Easing object exists and 
+	 * sets the default easing if not.
+	 */
 	if(!window.Easing) {
 		Easing = {
 			linear : function (t, b, c, d) { 
@@ -66,6 +73,12 @@
 		
 		
 		// private methods
+		/**
+		 * @private
+		 * _setProps
+		 * Sets all the props we're tweening in the changeProps array
+		 * @param {Object} o - The object with the properties we're tweening
+		 */
 		this._setProps = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
@@ -84,6 +97,11 @@
 			}
 		};
 		
+		/**
+		 * @private
+		 * _setUID
+		 * Sets a unique to the tween
+		 */
 		this._setUID = function() {
 			var curUID = this.target.getAttribute("data-tweenId");
 			if(curUID != null) SimpleSynchro.removeListener(SimpleTween.getTweenByUID(curUID).stop());
@@ -92,6 +110,13 @@
 			this.target.setAttribute("data-tweenId", this.uid);
 		};
 		
+		/**
+		 * @private
+		 * _getSuffix
+		 * Gets the correct suffix for the corresponding property
+		 * @param {String} prop - the property to get the suffix for.
+		 * @returns {String} The suffix string
+		 */
 		this._getSuffix = function(prop) {
 			return (prop !== "opacity") ? this._suffix : " ";
 		};
@@ -113,12 +138,25 @@
 		p.uid = 0;
 		SimpleSynchro = window.SimpleSynchro;
 	
+	/**
+	 * initialize
+	 * Initializes the SimpleTween
+	 * @param {Object} obj - The target object to animate
+	 * @param {Object} props - The props to set 
+	 */
 	p.initialize = function(obj, props) {
 		this.target = obj;
 		this._setProps(props);
 		this._setUID();
 	};
 	
+	/**
+	 * tick
+	 * This is the method that's called from SimpleSynchro.
+	 * It updates all the properties of the object and checks
+	 * for completion and triggers
+	 * @param {Number} time - Current time of the animation
+	 */
 	p.tick = function(time) {
 		if(this.isPlaying && !this.isPaused) { 
 			var elapsed = time - this._time - this._pausedTime.end;
@@ -139,20 +177,43 @@
 		}
 	};
 	
+	/**
+	 * delay
+	 * Delays the start of the tween.
+	 * @param {Number} value - the time to delay the tween in seconds
+	 */
 	p.delay = function(value) {
 		this._delay = value || 0;
 		return this;
 	};
 	
+	/**
+	 * setPosition
+	 * Sets the property of the object and checks for the correct
+	 * suffix of the property
+	 * @param {String} prop - the property to tween
+	 * @param {Number} p - the amount to tween
+	 */
 	p.setPosition = function(prop, p){
 		this.target.style[prop] = p + this._getSuffix(prop);
 	};
 	
+	/**
+	 * callback
+	 * Sets the callback object for the tween
+	 * @param {Object} obj - the object that has the listeners
+	 */
 	p.callback = function(obj) {
 		this._callback = obj || null;
 		return this;
 	};
 	
+	/**
+	 * getPosition
+	 * Gets the current positon (or value) of the object
+	 * @param {Number} t - the time (used for easing)
+	 * @param {Object} prop - the prop object with the start, change and trigger values
+	 */
 	p.getPosition = function(t, prop){
 		var pos = this._ease(t, prop.start, prop.change, this._duration);
 	
@@ -166,6 +227,12 @@
 		return pos;
 	};
 	
+	/**
+	 * checkTrigger
+	 * Checks if the object is at the position to call the trigger
+	 * @param {Number} pos - the current position
+	 * @param {Object} prop - the prop object with the trigger position
+	 */
 	p.checkTrigger = function(pos, prop) {
 		if(prop.start < prop.end) { 
 			if(pos > prop.trigger) return true;
@@ -175,6 +242,10 @@
 		return false;
 	};
 	
+	/**
+	 * start
+	 * Starts the animation running
+	 */
 	p.start = function() {
 		this._time = SimpleSynchro.getTime() + this._delay;
 		this._totalTime = this._time + this._duration;
@@ -185,6 +256,10 @@
 		return this;
 	};
 	
+	/**
+	 * stop
+	 * Stops the current animation
+	 */
 	p.stop = function() {
 		this.isPlaying = false;
 		this.dispatch("onStop");
@@ -192,6 +267,11 @@
 		return this;
 	};
 	
+	/** 
+	 * destroy
+	 * Stops the animation and removes all
+	 * references from possible listeners
+	 */
 	p.destroy = function() {
 		this.stop();
 		this.target.removeAttribute("data-tweenId");
@@ -199,6 +279,10 @@
 		SimpleTween.TWEENS.splice(this.uid, 1);
 	};
 	
+	/**
+	 * pause
+	 * Pauses the animation
+	 */
 	p.pause = function() {
 		this.isPaused = !this.isPaused;
 		if(this.isPaused) {
@@ -212,28 +296,57 @@
 		return this;
 	};
 	
+	/**
+	 * dispatch
+	 * Dispatchs the current state to the callback object.
+	 * @param {String} evt - the event name to dispatch
+	 */
 	p.dispatch = function(evt) {
 		if(this._callback && this._callback[evt]) this._callback[evt].call(this, {type:evt, tween: this});
 	};
 	
+	/**
+	 * getElapsedTime
+	 * Gets the total elapsed time this aniamtion has run
+	 */
 	p.getElapsedTime = function() {
 		return (SimpleSynchro.getTime() - this._time) - this._pausedTime.end;
 	};
 	
+	/**
+	 * toString
+	 * @returns {String} the name and id of the tween
+	 */
 	p.toString = function() {
 		return "[object SimpleTween "+ this.uid +"]";
 	};
 	
 	// public static methods
+	/**
+	 * to
+	 * A shortcut to instanciate SimpleTween
+	 */
 	SimpleTween.to = function(obj, duration, props, vars) {
 		return new SimpleTween(obj, duration, props, vars);
 	};
 	
+	/**
+	 * getTweenByUID
+	 * Gets a tween by it's UID
+	 * @returns {SimpleTween} A SimpleTween object
+	 */
 	SimpleTween.getTweenByUID = function(uid) {
 		 return SimpleTween.TWEENS[uid];
 	};
 	
 	// private static methods
+	/**
+	 * @private
+	 * _getCurrentStyle
+	 * Gets the current style of an object
+	 * @param {Object} The object to get the style from
+	 * @returns {String} A string with the current value
+	 */
 	SimpleTween._getCurrentStyle = function(obj) {
 	  	var computedStyle;
 	  	if (typeof obj.currentStyle != 'undefined') { 
@@ -245,6 +358,13 @@
 	  	return computedStyle;
 	};
 	
+	/**
+	 * @private
+	 * _removeSuffix
+	 * Removes the suffix string from a value
+	 * @param {String} value - the value to remove the suffix from
+	 * @param {String} suffix - the suffix string to remove
+	 */
 	SimpleTween._removeSuffix = function(value, suffix) {
 		return Number((value != '' && suffix != ' ') ? value.substring(0, value.indexOf(suffix)) : value);
 	};

@@ -7,6 +7,13 @@
 * 
 * Version 0.4b
 * 
+* usage:
+* timeline = new SimpleTimeline();
+* timeline.addTween(tween1, 0);
+* timeline.addTween(tween2, 0);
+* timeline.addTween(tween3, 2);
+* timeline.start();
+* 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -33,10 +40,15 @@
 		this._callback = callback || null;
 		
 		/**
+		 * @private
+		 * _add
 		 * Adds a tween at the specified array index
-		 * that's referenced by seconds.
+		 * that's referenced by seconds. If no time is passed,
+		 * then the tween time is used.
 		 * Example: A tween to start at 3.25 gets inserted
 		 * at the index of 3
+		 * @param {SimpleTween} tween - the tween to add
+		 * @param {Number} time - the time at which to call the tween
 		 */
 		this._add = function(tween, time) {
 			//console.log("_add: ",tween);
@@ -49,10 +61,20 @@
 			this._tweens[index].sort(this._sortTime);
 		};
 		
+		/**
+		 * @private
+		 * _sortTime
+		 * Sorts the _tweens array by time
+		 */
 		this._sortTime = function(a,b) {
 			return a.time-b.time;
 		};
 		
+		/**
+		 * _getTweenGroup
+		 * @param (Number) sec - the second (array index) the gets the tweens from
+		 * @returns The array of tweens at the specified time
+		 */
 		this._getTweenGroup = function(sec) {
 			return this._tweens[sec] || null;
 		};
@@ -66,6 +88,15 @@
 		p.callback = null;
 		p.isPlaying = false;
 	
+	/**
+	 * tick
+	 * The main method called from SimpleSynchro.
+	 * Pulls the _tweenGroup for the current second and 
+	 * loops through them, comparing the current time
+	 * against the tween time.
+	 * If all the tweens are started, call the callback
+	 * @param {Number} elapsed - the time elapsed (passed from SimpleSynchro)
+	 */
 	p.tick = function(elapsed) {
 		var curTime = elapsed - this._startTime,
 			curSec = Math.floor(curTime);
@@ -95,10 +126,20 @@
 		this._sec = curSec;
 	};
 	
+	/**
+	 * addTween
+	 * Adds a tween to the timeline at the specified time.
+	 * @param {SimpleTween} tween - the tween to add
+	 * @param {Number} time - the time at which to call the tween
+	 */
 	p.addTween = function(tween, time) {
 		this._add(tween, time);
 	};
 
+	/**
+	 * start
+	 * Starts the timeline
+	 */
 	p.start = function() {
 		if(!this.isPlaying) {
 			this.isPlaying = true;
@@ -107,6 +148,10 @@
 		}
 	};
 	
+	/**
+	 * toString
+	 * @returns {String} The name of the object - SimpleTimeline
+	 */
 	p.toString = function() {
 		return "[object SimpleTimeline]";
 	};
