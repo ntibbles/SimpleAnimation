@@ -5,9 +5,9 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.4b
+* Version 0.42b
 * 
-* useage:
+* usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
 * 
 * This program is free software: you can redistribute it and/or modify
@@ -76,7 +76,9 @@
 		/**
 		 * @private
 		 * _setProps
-		 * Sets all the props we're tweening in the changeProps array
+		 * Sets all the props we're tweening in the changeProps array.
+		 * For speed, try and pre-calculate all positions.
+		 * For the trigger, pre-calcuate the end.
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
 		this._setProps = function(o) {
@@ -90,7 +92,7 @@
 				this._changeProps[prop]["change"] = o[prop] - curPos;
 				for(tprop in this._trigger) {
 					if(tprop === prop) {
-						this._changeProps[prop]["trigger"] = this._trigger[tprop];
+						this._changeProps[prop]["trigger"] = Math.abs(this._trigger[tprop] - curPos);
 						this._triggers++;
 					}
 				}
@@ -122,12 +124,14 @@
 		};
 		
 		this.initialize(obj, props);
+		
+		// add to the SimpleSynchro
 		SimpleSynchro.addListener(this);
 		
 		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.4b";
+	SimpleTween.VERSION = "0.42b";
 	SimpleTween.TWEENS = [];
 	
 	var p = SimpleTween.prototype;
@@ -165,7 +169,7 @@
 				
 			// set the position on each property
 			for(prop in this._changeProps) {
-				this.setPosition(prop, this.getPosition(elapsed, this._changeProps[prop]));
+				this.setProp(prop, this.getPosition(elapsed, this._changeProps[prop]));
 			}
 			
 			if(elapsed > this._duration) {
@@ -188,13 +192,13 @@
 	};
 	
 	/**
-	 * setPosition
+	 * setProp
 	 * Sets the property of the object and checks for the correct
 	 * suffix of the property
 	 * @param {String} prop - the property to tween
 	 * @param {Number} p - the amount to tween
 	 */
-	p.setPosition = function(prop, p){
+	p.setProp = function(prop, p){
 		this.target.style[prop] = p + this._getSuffix(prop);
 	};
 	
@@ -215,31 +219,19 @@
 	 * @param {Object} prop - the prop object with the start, change and trigger values
 	 */
 	p.getPosition = function(t, prop){
-		var pos = this._ease(t, prop.start, prop.change, this._duration);
+		var pos = Math.round(this._ease(t, prop.start, prop.change, this._duration)*100)/100;
 	
-		if(prop.trigger && this.checkTrigger(pos, prop)) {
-			this._triggers--;
-			if(this._triggers == 0) {
-				this._trigger.callback.call(this, {target: this.target});
+		if(prop.trigger) {
+			prop.trigger--;
+			if(prop.trigger <= 0){
+				this._triggers--;
+				if(this._triggers == 0) {
+					this._trigger.callback.call(this, {target: this.target});
+				}
+				prop.trigger = null;
 			}
-			prop.trigger = null;
 		}
 		return pos;
-	};
-	
-	/**
-	 * checkTrigger
-	 * Checks if the object is at the position to call the trigger
-	 * @param {Number} pos - the current position
-	 * @param {Object} prop - the prop object with the trigger position
-	 */
-	p.checkTrigger = function(pos, prop) {
-		if(prop.start < prop.end) { 
-			if(pos > prop.trigger) return true;
-		} else {
-			if(pos < prop.trigger) return true;
-		}
-		return false;
 	};
 	
 	/**
