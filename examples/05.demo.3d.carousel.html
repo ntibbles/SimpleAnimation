@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>promo_poc</title>
+		<meta name="description" content="3D Carousel using the SimpleAnimation Library" />
+		<meta name="author" content="Noel Tibbles" />
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+		<script type="text/javascript" src="../libs/SimpleSynchro.js"></script>
+		
+		<style>
+			body {
+				font-family: Arial, helvetica, sans-serif;
+				font-size: 12px;
+			}
+			
+			.promo {
+				width:639px;
+				height:154px;
+				overflow: hidden;
+				position: relative;
+				border:8px solid #FFF;
+				background-color:#000;
+			}
+			
+			.holder {
+				width:200px;
+				height:200px;
+				position: relative;
+				cursor: pointer;
+			}
+			
+			.title {
+				position:absolute;
+				right:10px;
+				top:10px;
+				z-index:1000;
+				color:#ec4499;
+			}
+			
+			.left {
+				float:left;
+			}
+			
+			img {
+				position:absolute;
+			}
+			
+			#flag {
+				position:absolute;
+				z-index:9999;
+				top:-2px;
+				left:-5px;
+			}
+			
+			#cta {
+				position:absolute;
+				z-index: 1001;
+				bottom: 5px;
+				right: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<div class="controls left">
+				<table>
+					<tr>
+						<td>Radius X</td><td><input id="radiusX" type="range" value="200" min="100" max="300" step="5" /><span>200</span></td>
+					</tr>
+					<tr>
+						<td>Radius Y</td><td><input id="radiusY" type="range" value="5" min="1" max="10" step="1" /><span>5</span></td>
+					</tr>
+					<tr>
+						<td>Scale</td><td><input id="scale" type="range" value="100" min="100" max="500" step="10" /><span>100</span></td>
+					</tr>
+				</table>
+			</div>
+			
+			<div class="promo left">
+				<div class="holder">
+					<img id="promo1" src="img/demo5/icon1.png" />
+					<img id="promo2" src="img/demo5/icon2.png" />
+					<img id="promo3" src="img/demo5/icon3.png" />
+					<img id="promo4" src="img/demo5/icon4.png" />
+					<img id="promo5" src="img/demo5/icon5.png" />
+					<img id="promo6" src="img/demo5/icon6.png" />
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			var tiles = $(".holder").children(),
+				radiusX = $("#radiusX").val(),
+				radiusY = $("#radiusY").val() / 10,
+				scale = $("#scale").val(),
+				centerX = 270,
+				centerY = 9,
+				speed = .01;
+				
+			function init() {
+				$.each(tiles, function(index, obj) {
+					var $obj = $(obj),
+						data = {
+							angle: index * ((Math.PI*2)/tiles.length)
+						};
+					$obj.data("defaults", data); // arbitrary data needed later
+				});
+				
+				$(".promo").mousemove(handleMouseMove).mouseleave(handleMouseLeave);
+				$("#radiusX").bind('change', handleChange);
+				$("#radiusY").bind('change', handleChange);
+				$("#scale").bind('change', handleChange);
+			};
+			
+			function handleMouseMove(evt) {
+				speed = (evt.clientX-centerX)/30000;
+			};
+			
+			function handleMouseLeave(evt) {
+				speed = 0;
+			};
+			
+			function calcDist(z) {
+				return d/(1+(z/zo));
+			};
+			
+			function tick() {
+				$.each(tiles, function(index, obj) {
+					var $obj = $(obj),
+						$data = $obj.data("defaults"),
+						s = Math.sin($data.angle) * radiusY + centerY /(centerY+radiusY);
+					$obj.css("left", Math.cos($data.angle) * radiusX + centerX).css("top", Math.sin($data.angle) * radiusY + centerY);
+					$obj.css("height", s*scale).css("z-index", Math.round(s*scale)+1).css("opacity", s*scale/100);
+					$obj.data("defaults").angle += speed;
+				});
+			};
+			
+			function handleChange(evt) {
+				var val = $(evt.target).val();
+				$(evt.target).next().html(val);
+				window[evt.target.id] = (evt.target.id != "radiusY") ? val : val/10;
+			};
+			
+			init();
+		
+			SimpleSynchro.addListener(this);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>index</title>
+		<meta name="description" content="" />
+		<meta name="author" content="Noel Tibbles" />
+	
+		<style>
+			body {
+				background-color: #000000;
+			}
+			#container {
+				position: relative;
+				width: 802px;
+				height: 602px;
+				margin: auto;
+				overflow: hidden;
+			}
+			#form {
+				position: absolute;
+				width: 100px;
+				height: 50px;
+				left: -180px;
+				top: 450px;
+				z-index: 200;
+			}
+			.box {
+				background: url('img/demo6/jaguar.jpg') no-repeat;
+				height: 200px;
+				overflow: hidden;
+				display: block;
+				float: left;
+				border: 1px solid #333333;
+				position: absolute;
+			}
+			.row {
+				position: absolute;
+				clear: both;
+			} 
+ 		</style>
+		<script type="text/javascript" src="../libs/Easing.js"></script>
+		<script type="text/javascript" src="../libs/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../libs/SimpleTween.js"></script>
+		<script type="text/javascript" src="../libs/SimpleTimeline.js"></script>
+		
+	</head>
+	<body>
+		<div>
+			<div id="container">
+				<div id="row0" class="row">
+					<div id="r0_c0" class="box"></div>
+					<div id="r0_c1" class="box" style="background-position-x:-200px; left:200px"></div>
+					<div id="r0_c2" class="box" style="background-position-x:-400px; left:400px"></div>
+					<div id="r0_c3" class="box" style="background-position-x:-600px; left:600px"></div>
+				</div>
+				
+				<div id="row1" class="row">
+					<div id="r1_c0" class="box" style="top:200px; background-position-y:-200px;"></div>
+					<div id="r1_c1" class="box" style="top:200px; background-position-x:-200px; background-position-y:-200px; left:200px"></div>
+					<div id="r1_c2" class="box" style="top:200px; background-position-x:-400px; background-position-y:-200px; left:400px"></div>
+					<div id="r1_c3" class="box" style="top:200px; background-position-x:-600px; background-position-y:-200px; left:600px"></div>
+				</div>
+				
+				<div id="row2" class="row">
+					<div id="r2_c0" class="box" style="top:400px; background-position-y:-400px;"></div>
+					<div id="r2_c1" class="box" style="top:400px; background-position-x:-200px; background-position-y:-400px; left:200px"></div>
+					<div id="r2_c2" class="box" style="top:400px; background-position-x:-400px; background-position-y:-400px; left:400px"></div>
+					<div id="r2_c3" class="box" style="top:400px; background-position-x:-600px; background-position-y:-400px; left:600px"></div>
+				</div>
+				
+				<div id="form">
+					<img src="img/demo6/artist.png" />
+				</div>
+			</div>
+		</div>
+		<script>
+			var cols = 4, rows = 3, tweenInterval = 1, tweenTime = .75, test,
+				timeline = new SimpleTimeline(completeHandler);
+						
+			function init() {
+				for(var i = 0; i < rows; i++) {
+					for(var j = 0; j < cols; j++) {
+						var el = "r"+i+"_c"+j,
+							tween = SimpleTween.to(document.getElementById(el), tweenTime, {width:200}, {ease: Easing.strongEaseOut });
+							
+						timeline.addTween(tween, (j*tweenInterval)*(i/2));
+					}
+				}
+				timeline.start();
+			}
+			
+			function completeHandler() {
+				console.log("completeHandler");
+				var div = getRandomDiv();
+					target = document.getElementById(div),
+					handler = {
+						onComplete: function() {
+							SimpleTween.to(target, 1, {backgroundPositionX:0, backgroundPositionY:0, width:799, height:599}, {ease: Easing.backEaseInOut });
+						}
+					};
+					console.log("div pos: ",target.style.left);
+				test = document.getElementById(div);
+				target.style.zIndex = 99;
+				SimpleTween.to(target, 1, {top:0, left:0}, {trigger: { left:50, callback: triggerHandler }, callback: handler, ease: Easing.strongEaseOut});
+			}
+			
+			function triggerHandler(evt) {
+				console.log("trigger");
+				SimpleTween.to(document.getElementById("form"), 3, {left:600}, {ease: Easing.backEaseOut}).start();
+			}
+			
+			function getRandomDiv() {
+				return "r"+Math.floor(Math.random() * rows)+"_c"+Math.floor(Math.random() * cols);
+			}
+			
+			function tick(){
+				if(test == undefined) return;
+				console.log("pos: ",test.style.left);
+			}
+			
+			//SimpleSynchro.addListener(window);
+			
+			init();				
+		</script>
+	</body>
+</html>
