@@ -11,6 +11,7 @@
 	
 		<style>
 			body {
+				color: #FFFFFF;
 				background-color: #000000;
 			}
 			#container {
@@ -50,6 +51,8 @@
 	</head>
 	<body>
 		<div>
+			<h1>PRESS START</h1><input type="button" onclick="timeline.start();" value="Start">
+			<input type="button" onclick="javascript:location.reload(true);" value="Reset">
 			<div id="container">
 				<div id="row0" class="row">
 					<div id="r0_c0" class="box"></div>
@@ -78,9 +81,13 @@
 			</div>
 		</div>
 		<script>
-			var cols = 4, rows = 3, tweenInterval = 1, tweenTime = .75, test,
+			var cols = 4, rows = 3, tweenInterval = 1, tweenTime = .75,
 				timeline = new SimpleTimeline(completeHandler);
-						
+			
+			/**
+			 * Initializes the page by grabing an element,
+			 * creating a tween and adding to the timeline
+			 */
 			function init() {
 				for(var i = 0; i < rows; i++) {
 					for(var j = 0; j < cols; j++) {
@@ -90,39 +97,43 @@
 						timeline.addTween(tween, (j*tweenInterval)*(i/2));
 					}
 				}
-				timeline.start();
+				
 			}
 			
+			/**
+			 * Once the timeline is complete, get a random div
+			 * give it a z-index of 99 and create a tween to move
+			 * it to top:0 and left:0 and create a completehandler
+			 * that moves the background to x:0, y:0 while resizing
+			 * the width and height of the tile to width:799 and height:599
+			 * (A 1px pad for the border)
+			 */
 			function completeHandler() {
-				console.log("completeHandler");
-				var div = getRandomDiv();
-					target = document.getElementById(div),
+				var target = document.getElementById(getRandomDiv()),
 					handler = {
 						onComplete: function() {
 							SimpleTween.to(target, 1, {backgroundPositionX:0, backgroundPositionY:0, width:799, height:599}, {ease: Easing.backEaseInOut });
 						}
 					};
-					console.log("div pos: ",target.style.left);
-				test = document.getElementById(div);
+				
 				target.style.zIndex = 99;
 				SimpleTween.to(target, 1, {top:0, left:0}, {trigger: { left:50, callback: triggerHandler }, callback: handler, ease: Easing.strongEaseOut});
 			}
 			
+			/**
+			 * Waits for the trigger and creates a tween
+			 * to slide in the author's name
+			 */
 			function triggerHandler(evt) {
-				console.log("trigger");
-				SimpleTween.to(document.getElementById("form"), 3, {left:600}, {ease: Easing.backEaseOut}).start();
+				SimpleTween.to(document.getElementById("form"), 3, {left:600}, {ease: Easing.backEaseOut});
 			}
 			
+			/**
+			 * Gets a random div
+			 */
 			function getRandomDiv() {
 				return "r"+Math.floor(Math.random() * rows)+"_c"+Math.floor(Math.random() * cols);
 			}
-			
-			function tick(){
-				if(test == undefined) return;
-				console.log("pos: ",test.style.left);
-			}
-			
-			//SimpleSynchro.addListener(window);
 			
 			init();				
 		</script>

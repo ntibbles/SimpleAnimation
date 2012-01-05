@@ -67,6 +67,16 @@
 	</head>
 	<body>
 		<div>
+			<div class="promo left">
+				<div class="holder">
+					<img id="promo1" src="img/demo5/icon1.png" />
+					<img id="promo2" src="img/demo5/icon2.png" />
+					<img id="promo3" src="img/demo5/icon3.png" />
+					<img id="promo4" src="img/demo5/icon4.png" />
+					<img id="promo5" src="img/demo5/icon5.png" />
+					<img id="promo6" src="img/demo5/icon6.png" />
+				</div>
+			</div>
 			<div class="controls left">
 				<table>
 					<tr>
@@ -80,17 +90,6 @@
 					</tr>
 				</table>
 			</div>
-			
-			<div class="promo left">
-				<div class="holder">
-					<img id="promo1" src="img/demo5/icon1.png" />
-					<img id="promo2" src="img/demo5/icon2.png" />
-					<img id="promo3" src="img/demo5/icon3.png" />
-					<img id="promo4" src="img/demo5/icon4.png" />
-					<img id="promo5" src="img/demo5/icon5.png" />
-					<img id="promo6" src="img/demo5/icon6.png" />
-				</div>
-			</div>
 		</div>
 		
 		<script>
@@ -98,7 +97,7 @@
 				radiusX = $("#radiusX").val(),
 				radiusY = $("#radiusY").val() / 10,
 				scale = $("#scale").val(),
-				centerX = 270,
+				centerX = 250,
 				centerY = 9,
 				speed = .01;
 				
@@ -125,15 +124,12 @@
 				speed = 0;
 			};
 			
-			function calcDist(z) {
-				return d/(1+(z/zo));
-			};
-			
 			function tick() {
 				$.each(tiles, function(index, obj) {
 					var $obj = $(obj),
 						$data = $obj.data("defaults"),
-						s = Math.sin($data.angle) * radiusY + centerY /(centerY+radiusY);
+						s = Math.sin($data.angle) * radiusY + centerY / (centerY+radiusY);
+						
 					$obj.css("left", Math.cos($data.angle) * radiusX + centerX).css("top", Math.sin($data.angle) * radiusY + centerY);
 					$obj.css("height", s*scale).css("z-index", Math.round(s*scale)+1).css("opacity", s*scale/100);
 					$obj.data("defaults").angle += speed;
