@@ -92,11 +92,14 @@
 				this._changeProps[prop]["change"] = o[prop] - curPos;
 				for(tprop in this._trigger) {
 					if(tprop === prop) {
-						this._changeProps[prop]["trigger"] = Math.abs(this._trigger[tprop] - curPos);
+						this._changeProps[prop]["trigger"] = this._trigger[tprop];
 						this._triggers++;
+						console.log("trigger: ", this._changeProps[prop]["trigger"]);
 					}
 				}
 			}
+			
+			//console.log("changeProps: ", this._changeProps);
 		};
 		
 		/**
@@ -214,24 +217,40 @@
 	
 	/**
 	 * getPosition
-	 * Gets the current positon (or value) of the object
+	 * Gets the current positon (or value) of the object.
+	 * Checks for a trigger and decrements the precalculated number.
 	 * @param {Number} t - the time (used for easing)
 	 * @param {Object} prop - the prop object with the start, change and trigger values
 	 */
 	p.getPosition = function(t, prop){
 		var pos = Math.round(this._ease(t, prop.start, prop.change, this._duration)*100)/100;
-	
-		if(prop.trigger) {
-			prop.trigger--;
-			if(prop.trigger <= 0){
-				this._triggers--;
-				if(this._triggers == 0) {
-					this._trigger.callback.call(this, {target: this.target});
-				}
-				prop.trigger = null;
+		
+		if(prop.trigger && this.checkTrigger(pos, prop)) {
+			this._triggers--;
+			if(this._triggers == 0) {
+				this._trigger.callback.call(this, {target: this.target});
 			}
+			prop.trigger = null;
 		}
+		
 		return pos;
+	};
+	
+	/**
+	 * checkTrigger
+	 * Checks the current position against the trigger
+	 * position.
+	 * @param {Number} pos - the position to check against
+	 * @param {Object} prop - the property object
+	 * @returns {Boolean} true if we're past the trigger point, otherwise false
+	 */
+	p.checkTrigger = function(pos, prop) {
+		if(prop.start < prop.end) { 
+			if(pos > prop.trigger) return true;
+		} else {
+			if(pos < prop.trigger) return true;
+		}
+		return false;
 	};
 	
 	/**
