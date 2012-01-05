@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Sliding Beer</title>
+		<meta name="description" content="Slide a beer across the screen with SimpleTween" />
+		<meta name="author" content="Noel Tibbles" />
+		<style>
+			/* The element you want to move MUST have relative 
+			 * or absolute positioning. Or else it WON'T work.
+			 */
+			img { position: absolute; top:20px; left:20px; }
+		</style>
+		<!-- Links to the scripts needed for the animation to work. -->
+		<script type="text/javascript" src="../../libs/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../../libs/SimpleTween.js"></script>
+	</head>
+	<body>
+		<div>
+			<img id="slidingBeer" src="img/beer.png" alt="Beer" />
+		</div>
+		<script>
+		 	// define the time it's takes for the tween to complete.
+		 	// this becomes more helpful when using many tweens
+			var time = 2;
+			
+			// get the element "slidingBeer", set the time, set the position left we want
+			// it to go.
+			SimpleTween.to(document.getElementById("slidingBeer"), time, { left:500 });
+		</script>
+	</body>
+</html>
