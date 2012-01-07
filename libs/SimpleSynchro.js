@@ -41,14 +41,22 @@
 		throw "SimpleSynchro can not be instantiated.";
 	}
 	
-	SimpleSynchro.VERSION = "0.4b";
+	SimpleSynchro.VERSION = "0.41b";
 	
 	/**
 	 * @private
-	 * Private array of listeners
+	 * PArray of listeners
 	 * @type {array}
 	 */
 	SimpleSynchro._listeners = [];
+	
+	/**
+	 * @private
+	 * Object that contains style tests
+	 * that have been completed
+	 * @type {Object}
+	 */
+	SimpleSynchro._tests = {};
 	
 	/**
 	 * @private
@@ -56,7 +64,6 @@
 	 * script has been initialized
 	 * @type {boolean}
 	 */
-	
 	SimpleSynchro._init = false;
 	
 	/**
@@ -129,6 +136,45 @@
 	 */
 	SimpleSynchro.toString = function() {
 		return "[object SimpleSynchro]";
+	};
+	
+	/**
+	 * test
+	 * Tests the browser for a style.
+	 * Known styles across browsers return the style.
+	 * @param {String} style - the style to test for
+	 * @return {String} The correct string for the corresponding style
+	 */
+	SimpleSynchro.test = function(style) {
+		switch(style) {
+			case "left":
+			case "top":
+			case "right":
+			case "bottom":
+			case "width":
+			case "height":
+			case "backgroundPositionX":
+			case "backgroundPositionY":
+			case "fontSize":
+				return style;
+				break;
+			case "opacity":
+				return SimpleSynchro._tests["opacity"] || SimpleSynchro._testOpacity();
+				break;
+			default:
+				throw "Test doesn't exist yet";
+		}
+	};
+	
+	/**
+	 * @private
+	 * _testOpacity
+	 * Tests if the browser supports opacity or filters
+	 * @return {String} "opacity" or "filter"
+	 */
+	SimpleSynchro._testOpacity = function() {
+		var test = document.body;
+		return SimpleSynchro._tests["opacity"] = (typeof test.style.opacity !== 'undefined') ? 'opacity' : ((!!test.filters) ? 'filter' : 'none');
 	};
 	
 	/**

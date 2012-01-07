@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.42b
+* Version 0.43b
 * 
 * usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
@@ -71,35 +71,35 @@
 			this.isPaused = vars.pause || false;
 		}
 		
-		
 		// private methods
 		/**
 		 * @private
 		 * _setProps
 		 * Sets all the props we're tweening in the changeProps array.
+		 * Tests for the correct style name to store.
 		 * For speed, try and pre-calculate all positions.
-		 * For the trigger, pre-calcuate the end.
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
 		this._setProps = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
 			for(prop in o) {
-				var curPos = SimpleTween._removeSuffix(styles[prop], this._getSuffix(prop));
-				this._changeProps[prop] = {};
-				this._changeProps[prop]["start"] = curPos;
-				this._changeProps[prop]["end"] = o[prop]
-				this._changeProps[prop]["change"] = o[prop] - curPos;
+				var cProp = SimpleSynchro.test(prop),
+					curVal = SimpleTween._removeSuffix(styles[cProp], this._getSuffix(cProp)) || 1;
+				if(cProp == "filter") {
+					try { curVal = o.filters.alpha.opacity } catch(e) {};
+				};
+				this._changeProps[cProp] = {};
+				this._changeProps[cProp]["start"] = curVal;
+				this._changeProps[cProp]["end"] = o[prop]
+				this._changeProps[cProp]["change"] = o[prop] - curVal;
 				for(tprop in this._trigger) {
-					if(tprop === prop) {
-						this._changeProps[prop]["trigger"] = this._trigger[tprop];
+					if(tprop === cProp) {
+						this._changeProps[cProp]["trigger"] = this._trigger[tprop];
 						this._triggers++;
-						console.log("trigger: ", this._changeProps[prop]["trigger"]);
 					}
 				}
-			}
-			
-			//console.log("changeProps: ", this._changeProps);
+			};
 		};
 		
 		/**
@@ -117,13 +117,27 @@
 		
 		/**
 		 * @private
+		 * _getNormalizedStyleValue
+		 * Creates a normalized string for the style being tweened.
+		 * Primarily for the opacity on IE it ensures the correct value is 
+		 * returned
+		 * @param {String} prop - The property to tween
+		 * @param {Number} val - The value to tween
+		 * @return {String} the full string value to tween
+		 */
+		this._getNormalizedStyleValue = function(prop, val) {
+			return (prop !== "filter") ? val+this._getSuffix(prop) : "alpha(opacity="+(val * 10)+this._getSuffix(prop);
+		};
+		
+		/**
+		 * @private
 		 * _getSuffix
 		 * Gets the correct suffix for the corresponding property
 		 * @param {String} prop - the property to get the suffix for.
-		 * @returns {String} The suffix string
+		 * @returns {String} The suffix string, empty for opacity or close bracket for filter
 		 */
 		this._getSuffix = function(prop) {
-			return (prop !== "opacity") ? this._suffix : " ";
+			return (prop !== "opacity" && prop !== "filter") ? this._suffix : ((prop === "opacity") ? " " : ")");
 		};
 		
 		this.initialize(obj, props);
@@ -134,7 +148,7 @@
 		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.42b";
+	SimpleTween.VERSION = "0.43b";
 	SimpleTween.TWEENS = [];
 	
 	var p = SimpleTween.prototype;
@@ -202,7 +216,7 @@
 	 * @param {Number} p - the amount to tween
 	 */
 	p.setProp = function(prop, p){
-		this.target.style[prop] = p + this._getSuffix(prop);
+		this.target.style[prop] = this._getNormalizedStyleValue(prop, p);
 	};
 	
 	/**
@@ -377,6 +391,7 @@
 	 * @param {String} suffix - the suffix string to remove
 	 */
 	SimpleTween._removeSuffix = function(value, suffix) {
+		//console.log("value: ",value);
 		return Number((value != '' && suffix != ' ') ? value.substring(0, value.indexOf(suffix)) : value);
 	};
 	
