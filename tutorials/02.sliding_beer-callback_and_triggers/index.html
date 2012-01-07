@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Sliding Beer</title>
+		<meta name="description" content="Slide a beer across the screen with SimpleTween" />
+		<meta name="author" content="Noel Tibbles" />
+		<style>
+			/* The element you want to move MUST have relative 
+			 * or absolute positioning. Or else it WON'T work.
+			 */
+			img { position: absolute; top:20px; left:20px; }
+			
+			/** move the controls and status below the image **/
+			#controls { position:absolute; top: 300px;}
+		</style>
+		<!-- Links to the scripts needed for the animation to work. -->
+		<script type="text/javascript" src="../../libs/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../../libs/SimpleTween.js"></script>
+		<!-- Use jQuery to help with DOM Manipulation -->
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
+	</head>
+	<body>
+		<div>
+			<img id="slidingBeer" src="img/beer.png" alt="Beer" />
+			
+			<div id="controls">
+				<div id="status">stopped</div>
+				<input type="button" value="Start()" onclick="tween.start();" />
+				<input type="button" value="Pause()" onclick="tween.pause();" />
+			</div>
+		</div>
+		<script>
+		 	// define the time it's takes for the tween to complete.
+		 	// this becomes more helpful when using many tweens.
+		 	// It can also be hard coded in the call.
+			var time = 2;
+			
+			// declare the object that will handle the callbacks
+			var cbHandler = {};
+			
+			// pointers to the functions that will handle each event.
+			cbHandler.onComplete = handleTweenComplete;
+			cbHandler.onStart = handleTweenStart;
+			cbHandler.onStop = handleTweenStop;
+			cbHandler.onPause = handleTweenPause;
+			cbHandler.onResume = handleTweenResume;
+			
+			// get the element "slidingBeer", set the time, set the position left we want
+			// it to go.
+			// We're also adding the callback, trigger and pause property because we 
+			// want the buttons above to control the starting and pausing of the tween.
+			var tween = SimpleTween.to(document.getElementById("slidingBeer"), time, { left:500 }, { callback: cbHandler, trigger: { left:200, callback: triggerHandler }, pause:true });
+			
+			function handleTweenStart(evt) {
+				$("#status").html("started");
+			};
+			
+			function handleTweenStop(evt) {
+				$("#status").html("stopped");
+			};
+			
+			function handleTweenPause(evt) {
+				$("#status").html("paused");
+			};
+			
+			function handleTweenResume(evt) {
+				$("#status").html("resumed");
+			};
+			
+			function handleTweenComplete(evt) {
+				$("#status").html("completed");
+			};
+			
+			function triggerHandler(evt) {
+				$("#status").html("triggered");
+			};
+		</script>
+	</body>
+</html>
