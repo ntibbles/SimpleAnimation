@@ -63,7 +63,6 @@ SimpleTimeline is used to sequence multiple SimpleTweens. With SimpleTimeline yo
 Below are proposed updates and changes to the library
 
 + Add a reverse method to SimpleTween and SimpleTimeline
-+ Fix the opacity filter in IE
 + Add nested timelines
 + More advanced demos
 
