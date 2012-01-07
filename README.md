@@ -64,6 +64,7 @@ Below are proposed updates and changes to the library
 
 + Add a reverse method to SimpleTween and SimpleTimeline
 + Add nested timelines
++ CSS3 Transforms for rotation and scale
 + More advanced demos
 
 If you're interested in contributing, feel free to contact me: ntibbles@gmail.com
