@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.43b
+* Version 0.44b
 * 
 * usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
@@ -37,13 +37,12 @@
 		};
 	};
 	
-	SimpleTween = function(obj, duration, props, vars) {
+	SimpleTween = function(obj, duration, props, options) {
 		if(!SimpleSynchro) throw "The SimpleSynchro.js script is required to run SimpleTween";
 		
 		this.isPaused = false;
 		
 		// private properties
-		this._plugin = null;
 		this._time = 0;
 		this._duration = duration;
 		this._curTime = 0;
@@ -59,16 +58,25 @@
 		this._trigger = {};
 		this._delay = 0;
 		this._callback = null;
-		this._suffix = "px";
 		
-		// check for vars
-		if(vars) {
-			this._trigger =  vars.trigger || {};
-			this._ease = vars.ease || Easing.linear;
-			this._delay =  vars.delay || 0;
-			this._callback =  vars.callback || null;
-			this._suffix = vars.suffix || "px";
-			this.isPaused = vars.pause || false;
+		
+		// add the opacity_extension
+		var opacity = {
+			name: "opacity", 			// CSS name
+			alt_name: "filter",			// alternate name for browsers
+			prefix: "alpha(opacity=",	// prefix string
+			suffix: ")"					// suffix string
+		}
+		SimpleTween.registerExtension(opacity);
+		
+		// check for options
+		if(options) {
+			this._trigger =  options.trigger || {};
+			this._ease = options.ease || Easing.linear;
+			this._delay =  options.delay || 0;
+			this._callback =  options.callback || null;
+			this._suffix = options.suffix || "px";
+			this.isPaused = options.pause || false;
 		}
 		
 		// private methods
@@ -76,30 +84,57 @@
 		 * @private
 		 * _setProps
 		 * Sets all the props we're tweening in the changeProps array.
-		 * Tests for the correct style name to store.
-		 * For speed, try and pre-calculate all positions.
+		 * Tests that the property exists, and if not, checks for an
+		 * appropriate extension. If all fails, throws an error
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
 		this._setProps = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
 			for(prop in o) {
-				var cProp = SimpleSynchro.test(prop),
-					curVal = SimpleTween._removeSuffix(styles[cProp], this._getSuffix(cProp)) || 1;
-				if(cProp == "filter") {
-					try { curVal = o.filters.alpha.opacity } catch(e) {};
-				};
-				this._changeProps[cProp] = {};
-				this._changeProps[cProp]["start"] = curVal;
-				this._changeProps[cProp]["end"] = o[prop]
-				this._changeProps[cProp]["change"] = o[prop] - curVal;
-				for(tprop in this._trigger) {
-					if(tprop === cProp) {
-						this._changeProps[cProp]["trigger"] = this._trigger[tprop];
-						this._triggers++;
-					}
+				if(SimpleTween._test(prop)){ 
+					var curVal = SimpleTween._removeSuffix(styles[prop], this._getSuffix(prop));
+					this._setProp(prop, curVal, o[prop]);
+				} else if(SimpleTween._getExtension(prop)) {
+					// check extensions, assume 1 for filters
+					var ext = SimpleTween._getExtension(prop),
+						curVal = SimpleTween._removeSuffix(styles[ext.alt_name], this._getSuffix(ext.alt_name)) || 1;
+					if(ext.alt_name == "filter") {
+						// @FIXME need to get the value from ANY filter in IE
+						// try and get the current value of the opacity from IE
+						try { curVal = o.filters.alpha.opacity } catch(e) {};
+					};
+					this._setProp(ext.alt_name, curVal, o[prop]);
+				} else {
+					throw "Your browser doesn't support the property you're trying to tween. Please add the '"+prop+"' extension.";
 				}
 			};
+		};
+		
+		/**
+		 * _setProp
+		 * Sets the individual variables on a property and
+		 * sets the triggers
+		 * @param {String} prop - The property to set
+		 * @param {Number} start - The start position of the prop
+		 * @param {Number} end - The end position of the prop
+		 */
+		this._setProp = function(prop, start, end) {
+			this._changeProps[prop] = {
+				start : start,
+				end : end,
+				change : end - start,
+				multiplier : this._getMultiplier(prop),
+				prefix : this._getPrefix(prop),
+				suffix : this._getSuffix(prop)
+			};
+
+			for(tprop in this._trigger) {
+				if(tprop === prop) {
+					this._changeProps[prop]["trigger"] = this._trigger[tprop];
+					this._triggers++;
+				}
+			}
 		};
 		
 		/**
@@ -109,24 +144,12 @@
 		 */
 		this._setUID = function() {
 			var curUID = this.target.getAttribute("data-tweenId");
-			if(curUID != null) SimpleSynchro.removeListener(SimpleTween.getTweenByUID(curUID).stop());
+			if(curUID != null) {
+				SimpleSynchro.removeListener(SimpleTween.getTweenByUID(curUID).stop());
+			}
 
 			this.uid = SimpleTween.TWEENS.push(this) - 1;
 			this.target.setAttribute("data-tweenId", this.uid);
-		};
-		
-		/**
-		 * @private
-		 * _getNormalizedStyleValue
-		 * Creates a normalized string for the style being tweened.
-		 * Primarily for the opacity on IE it ensures the correct value is 
-		 * returned
-		 * @param {String} prop - The property to tween
-		 * @param {Number} val - The value to tween
-		 * @return {String} the full string value to tween
-		 */
-		this._getNormalizedStyleValue = function(prop, val) {
-			return (prop !== "filter") ? val+this._getSuffix(prop) : "alpha(opacity="+(val * 10)+this._getSuffix(prop);
 		};
 		
 		/**
@@ -137,7 +160,36 @@
 		 * @returns {String} The suffix string, empty for opacity or close bracket for filter
 		 */
 		this._getSuffix = function(prop) {
-			return (prop !== "opacity" && prop !== "filter") ? this._suffix : ((prop === "opacity") ? " " : ")");
+			var suffix = "px"
+			if(prop === "opacity") {
+				suffix = " "
+			} else if (prop === "filter"){
+				suffix = ")"
+			}
+			return  suffix;
+		};
+		
+		/**
+		 * @private
+		 * _getPrefix
+		 * Gets any prefix needed before the value of the style is evaluated
+		 * @param {String} prop - the property to get the prefix for.
+		 * @return {String} the prefix based on the property
+		 */
+		this._getPrefix = function(prop) {
+			var prefix = ""
+			if (prop === "filter"){
+				prefix = "alpha(opacity="
+			}
+			return prefix;
+		};
+		
+		this._getMultiplier = function(prop) {
+			var multi = 1;
+			if (prop === "filter"){
+				multi = 100;
+			}
+			return multi;
 		};
 		
 		this.initialize(obj, props);
@@ -148,7 +200,7 @@
 		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.43b";
+	SimpleTween.VERSION = "0.44b";
 	SimpleTween.TWEENS = [];
 	
 	var p = SimpleTween.prototype;
@@ -175,7 +227,7 @@
 	 * tick
 	 * This is the method that's called from SimpleSynchro.
 	 * It updates all the properties of the object and checks
-	 * for completion and triggers
+	 * for completion
 	 * @param {Number} time - Current time of the animation
 	 */
 	p.tick = function(time) {
@@ -186,7 +238,9 @@
 				
 			// set the position on each property
 			for(prop in this._changeProps) {
-				this.setProp(prop, this.getPosition(elapsed, this._changeProps[prop]));
+				var p = this._changeProps[prop],
+					val = p.prefix+(this.getPosition(elapsed, p)*p.multiplier)+p.suffix;
+				this.target.style[prop] = val;
 			}
 			
 			if(elapsed > this._duration) {
@@ -206,17 +260,6 @@
 	p.delay = function(value) {
 		this._delay = value || 0;
 		return this;
-	};
-	
-	/**
-	 * setProp
-	 * Sets the property of the object and checks for the correct
-	 * suffix of the property
-	 * @param {String} prop - the property to tween
-	 * @param {Number} p - the amount to tween
-	 */
-	p.setProp = function(prop, p){
-		this.target.style[prop] = this._getNormalizedStyleValue(prop, p);
 	};
 	
 	/**
@@ -327,7 +370,9 @@
 	 * @param {String} evt - the event name to dispatch
 	 */
 	p.dispatch = function(evt) {
-		if(this._callback && this._callback[evt]) this._callback[evt].call(this, {type:evt, tween: this});
+		if(this._callback && this._callback[evt]) {
+			this._callback[evt].call(this, {type:evt, tween: this});
+		}; 
 	};
 	
 	/**
@@ -364,6 +409,37 @@
 		 return SimpleTween.TWEENS[uid];
 	};
 	
+	/**
+	 * registerExtension
+	 * Adds an extension to the SimpleTween array.
+	 * Extensions are simply an object defining how the 
+	 * css property value should be rendered.
+	 * Checks if the extension exists and removes it if it does
+	 * @param {Object} ext - the extension to add
+	 */
+	SimpleTween.registerExtension = function(ext) {
+		if(typeof ext !== 'object') {
+			throw "Please register a valid extension";
+		};
+		SimpleTween.removeExtension(ext);
+		SimpleTween._extensions.push(ext);
+	};
+	
+	/**
+	 * removeExtension
+	 * Removes the extension from the array
+	 * @param {Object} ext - the extension to remove
+	 */
+	SimpleTween.removeExtension = function(ext) {
+		if (SimpleTween._extensions == []) { return; }
+		var index = SimpleTween._extensions.indexOf(ext);
+
+		if (index != -1) {
+			SimpleTween._extensions.splice(index, 1);
+		}
+	};
+
+	
 	// private static methods
 	/**
 	 * @private
@@ -384,16 +460,56 @@
 	};
 	
 	/**
+	* @private
+	* _getExtension
+	* Checks for an extension by it's name and returns it or false
+	* @param {String} name - the name to look for in the extensions array
+	* @return {Boolean/Object} - false if it doesn't exist, the object if it does
+	*/
+	SimpleTween._getExtension = function(name) {
+		for(var i = 0, len = SimpleTween._extensions.length; i < len; i++) {
+			if(SimpleTween._extensions[i]['name'] == name) {
+				return SimpleTween._extensions[i];
+			}
+		}
+
+		return false;
+	};
+	
+	/**
 	 * @private
 	 * _removeSuffix
 	 * Removes the suffix string from a value
 	 * @param {String} value - the value to remove the suffix from
 	 * @param {String} suffix - the suffix string to remove
+	 * @return {Number} the value without the suffix
 	 */
 	SimpleTween._removeSuffix = function(value, suffix) {
 		//console.log("value: ",value);
-		return Number((value != '' && suffix != ' ') ? value.substring(0, value.indexOf(suffix)) : value);
+		var num = 0;
+		if(value != '' && suffix != ' ') {
+			num = value.substring(0, value.indexOf(suffix))
+		} else {
+			num = value;
+		}
+		return Number(num);
 	};
+	
+	/**
+	 * test
+	 * Tests the browser for a style.
+	 * Known styles across browsers return the style.
+	 * @param {String} style - the style to test for
+	 * @return {String} The correct string for the corresponding style
+	 */
+	SimpleTween._test = function(style) {
+		var test = document.body;
+		if(typeof test.style[style] == "string") {
+			return true;
+		} 
+	};
+	
+	SimpleTween._extensions =[];
 	
 	window.SimpleTween = SimpleTween;
 }(window, document, undefined))

@@ -3,7 +3,7 @@
 * A JavaScript solution to control a single
 * event and synchronize all listeners.
 * 
-* Version 0.4b
+* Version 0.42b
 * 
 * usage:
 * <script type="text/javascript" src="libs/SimpleSynchro.js"></script>
@@ -41,7 +41,7 @@
 		throw "SimpleSynchro can not be instantiated.";
 	}
 	
-	SimpleSynchro.VERSION = "0.41b";
+	SimpleSynchro.VERSION = "0.42b";
 	
 	/**
 	 * @private
@@ -137,45 +137,20 @@
 	SimpleSynchro.toString = function() {
 		return "[object SimpleSynchro]";
 	};
-	
-	/**
-	 * test
-	 * Tests the browser for a style.
-	 * Known styles across browsers return the style.
-	 * @param {String} style - the style to test for
-	 * @return {String} The correct string for the corresponding style
-	 */
-	SimpleSynchro.test = function(style) {
-		switch(style) {
-			case "left":
-			case "top":
-			case "right":
-			case "bottom":
-			case "width":
-			case "height":
-			case "backgroundPositionX":
-			case "backgroundPositionY":
-			case "fontSize":
-				return style;
-				break;
-			case "opacity":
-				return SimpleSynchro._tests["opacity"] || SimpleSynchro._testOpacity();
-				break;
-			default:
-				throw "Test doesn't exist yet";
-		}
-	};
+
 	
 	/**
 	 * @private
+	 * REMOVED FOR EXTENSIONS --- 
 	 * _testOpacity
 	 * Tests if the browser supports opacity or filters
 	 * @return {String} "opacity" or "filter"
-	 */
+	 
 	SimpleSynchro._testOpacity = function() {
 		var test = document.body;
 		return SimpleSynchro._tests["opacity"] = (typeof test.style.opacity !== 'undefined') ? 'opacity' : ((!!test.filters) ? 'filter' : 'none');
 	};
+	*/
 	
 	/**
 	 * @private

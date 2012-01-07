@@ -1,5 +1,16 @@
-SimpleTween - 0.43b (01-06-12)
+SimpleTween - 
+0.44b (01-07-12)
+	- Introduced extensions (not fully implemented or tested)
+	- Optimized and removed methods 
+	- Expanded methods for readability
+	
+0.43b (01-06-12)
 	- Added opacity for IE7+
 
-SimpleSynchro - 0.41b (01-06-12)
+
+SimpleSynchro - 
+0.42b (01-07-12)
+	- Removed test for filters in favour of extensions
+	
+0.41b (01-06-12)
  	- Added test for opacity or filters
