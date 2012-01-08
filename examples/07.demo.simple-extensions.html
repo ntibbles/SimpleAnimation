@@ -43,6 +43,9 @@
 				position:absolute;
 				background-color:#0000FF;
 				margin-bottom:2px;
+				opacity: 0.2;
+				filter: alpha(opacity=20);
+				/*-webkit-transform:rotate(45deg) skew(45deg); -moz-transform:rotate(45deg);*/
 				
 			}
 			
@@ -69,6 +72,15 @@
 		<script>
 			var tween1, cbHandler = {};
 			
+			var rotate = {
+				name: "rotate",									// name to refer to in props
+				alts: ["MozTransform", "WebkitTransform"],		// browser tests for CSS property
+				val : ["rotate(%n%deg)", "rotate(%n%deg)"]		// browser specfic syntax
+			}
+			SimpleTween.registerExtension(rotate);		// register extension BEFORE any SimpleTween instances
+			
+			
+			// notice the 'rotate' parameter in the props object
 			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1, rotate:45}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;
