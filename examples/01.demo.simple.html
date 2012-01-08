@@ -43,7 +43,8 @@
 				position:absolute;
 				background-color:#0000FF;
 				margin-bottom:2px;
-				
+				opacity: 0.2;
+				filter: alpha(opacity=20);
 			}
 			
 			#status {
@@ -69,7 +70,7 @@
 		<script>
 			var tween1, cbHandler = {};
 			
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1, rotate:45}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;
 			cbHandler.onStop = handleTweenStop;
