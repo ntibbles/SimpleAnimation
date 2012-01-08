@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.44b
+* Version 0.45b
 * 
 * usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
@@ -58,7 +58,7 @@
 		this._trigger = {};
 		this._delay = 0;
 		this._callback = null;
-		
+	
 		// add the opacity_extension
 		var opacity = {
 			name: "opacity", 					// CSS name
@@ -97,6 +97,10 @@
 						end: o[prop]
 					};
 				
+				// @FIXME get the actual position from matrix, not reset to 0
+				if(styles[ext.alts] !== undefined && styles[ext.alts].substr("matrix") != -1){
+					args.start = 0;
+				}
 				if(ext) {
 					var multi =  ext.multiplier || 1;
 							
@@ -165,7 +169,7 @@
 		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.44b";
+	SimpleTween.VERSION = "0.45b";
 	SimpleTween.TWEENS = [];
 	
 	var p = SimpleTween.prototype;
@@ -402,7 +406,8 @@
 	SimpleTween.removeExtension = function(ext) {
 		if (SimpleTween._extensions == []) { return; }
 		var index = SimpleTween._extensions.indexOf(ext);
-
+		//console.log("remove extension: ",index);
+		// @FIXME not removing duplicates
 		if (index != -1) {
 			SimpleTween._extensions.splice(index, 1);
 			return true;
