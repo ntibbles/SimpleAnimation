@@ -77,11 +77,12 @@
 				alts: ["MozTransform", "WebkitTransform"],		// browser tests for CSS property
 				val : ["rotate(%n%deg)", "rotate(%n%deg)"]		// browser specfic syntax
 			}
-			SimpleTween.registerExtension(rotate);		// register extension BEFORE any SimpleTween instances
+			SimpleTween.registerExtension(rotate);				// register extension BEFORE any SimpleTween instances
 			
 			
 			// notice the 'rotate' parameter in the props object
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1, rotate:45}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1, rotate:405}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+			//tween2 = SimpleTween.to(document.getElementById('sqA'), 1, {rotate:45}, {ease: Easing.elasticEaseOut, pause:true});
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;
 			cbHandler.onStop = handleTweenStop;
@@ -106,6 +107,12 @@
 			
 			function handleTweenComplete(evt) {
 				$("#status").html("completed");
+				var complete = {
+					onComplete: function() {
+						SimpleTween.to(document.getElementById('sqA'), 2, { left:220, rotate:360 }, {ease: Easing.strongEaseOut});
+					}
+				}
+				SimpleTween.to(document.getElementById('sqA'), 1, { left:0, rotate:-180 }, { ease: Easing.strongEaseOut, callback: complete });
 			};
 			
 			function triggerHandler(evt) {
