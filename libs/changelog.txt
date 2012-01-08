@@ -1,8 +1,9 @@
 SimpleTween - 
 0.44b (01-07-12)
-	- Introduced extensions (not fully implemented or tested)
+	- Added extensions
 	- Optimized and removed methods 
 	- Expanded methods for readability
+	- Using regex and string manipulations
 	
 0.43b (01-06-12)
 	- Added opacity for IE7+

@@ -59,13 +59,12 @@
 		this._delay = 0;
 		this._callback = null;
 		
-		
 		// add the opacity_extension
 		var opacity = {
-			name: "opacity", 			// CSS name
-			alt_name: "filter",			// alternate name for browsers
-			prefix: "alpha(opacity=",	// prefix string
-			suffix: ")"					// suffix string
+			name: "opacity", 					// CSS name
+			alts: ["opacity","filter"],			// alternate name for browsers
+			val : ["%n%", "alpha(opacity=%n%)"],// string value
+			multiplier: [1, 100] 				// multiplier of value (optional)
 		}
 		SimpleTween.registerExtension(opacity);
 		
@@ -75,7 +74,6 @@
 			this._ease = options.ease || Easing.linear;
 			this._delay =  options.delay || 0;
 			this._callback =  options.callback || null;
-			this._suffix = options.suffix || "px";
 			this.isPaused = options.pause || false;
 		}
 		
@@ -84,30 +82,38 @@
 		 * @private
 		 * _setProps
 		 * Sets all the props we're tweening in the changeProps array.
-		 * Tests that the property exists, and if not, checks for an
-		 * appropriate extension. If all fails, throws an error
+		 * If there's an extension, adjust properties as needed
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
-		this._setProps = function(o) {
+		this._setAllProps = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
 			for(prop in o) {
-				if(SimpleTween._test(prop)){ 
-					var curVal = SimpleTween._removeSuffix(styles[prop], this._getSuffix(prop));
-					this._setProp(prop, curVal, o[prop]);
-				} else if(SimpleTween._getExtension(prop)) {
-					// check extensions, assume 1 for filters
-					var ext = SimpleTween._getExtension(prop),
-						curVal = SimpleTween._removeSuffix(styles[ext.alt_name], this._getSuffix(ext.alt_name)) || 1;
-					if(ext.alt_name == "filter") {
+				var ext = SimpleTween._getExtension(prop),
+					curVal = (SimpleTween._test(prop)) ? styles[prop].replace(/[A-Za-z$-]/g, "") : styles[ext.alts].replace(/[(=A-Za-z$-)]/g, ""),
+					args = {
+						start: Number(curVal),
+						prop: prop,
+						end: o[prop]
+					};
+				
+				if(ext) {
+					var multi =  ext.multiplier || 1;
+							
+					if(ext.alts == "filter") {
 						// @FIXME need to get the value from ANY filter in IE
 						// try and get the current value of the opacity from IE
-						try { curVal = o.filters.alpha.opacity } catch(e) {};
+						try { args.start = o.filters.alpha.opacity } catch(e) {};
 					};
-					this._setProp(ext.alt_name, curVal, o[prop]);
-				} else {
-					throw "Your browser doesn't support the property you're trying to tween. Please add the '"+prop+"' extension.";
-				}
+					if(ext.multiplier) {
+						args.start = args.start/ext.multiplier;
+					};
+					args.prop = ext.alts;
+					args.val = ext.val;
+					args.multi = multi;
+				};
+				
+				this._setProp(args);
 			};
 		};
 		
@@ -119,14 +125,13 @@
 		 * @param {Number} start - The start position of the prop
 		 * @param {Number} end - The end position of the prop
 		 */
-		this._setProp = function(prop, start, end) {
-			this._changeProps[prop] = {
-				start : start,
-				end : end,
-				change : end - start,
-				multiplier : this._getMultiplier(prop),
-				prefix : this._getPrefix(prop),
-				suffix : this._getSuffix(prop)
+		this._setProp = function(args) { 
+			this._changeProps[args.prop] = {
+				start : args.start,
+				end : args.end,
+				change : args.end - args.start,
+				multiplier : args.multi || 1,
+				val : args.val || "%n%px"
 			};
 
 			for(tprop in this._trigger) {
@@ -134,7 +139,7 @@
 					this._changeProps[prop]["trigger"] = this._trigger[tprop];
 					this._triggers++;
 				}
-			}
+			};
 		};
 		
 		/**
@@ -150,46 +155,6 @@
 
 			this.uid = SimpleTween.TWEENS.push(this) - 1;
 			this.target.setAttribute("data-tweenId", this.uid);
-		};
-		
-		/**
-		 * @private
-		 * _getSuffix
-		 * Gets the correct suffix for the corresponding property
-		 * @param {String} prop - the property to get the suffix for.
-		 * @returns {String} The suffix string, empty for opacity or close bracket for filter
-		 */
-		this._getSuffix = function(prop) {
-			var suffix = "px"
-			if(prop === "opacity") {
-				suffix = " "
-			} else if (prop === "filter"){
-				suffix = ")"
-			}
-			return  suffix;
-		};
-		
-		/**
-		 * @private
-		 * _getPrefix
-		 * Gets any prefix needed before the value of the style is evaluated
-		 * @param {String} prop - the property to get the prefix for.
-		 * @return {String} the prefix based on the property
-		 */
-		this._getPrefix = function(prop) {
-			var prefix = ""
-			if (prop === "filter"){
-				prefix = "alpha(opacity="
-			}
-			return prefix;
-		};
-		
-		this._getMultiplier = function(prop) {
-			var multi = 1;
-			if (prop === "filter"){
-				multi = 100;
-			}
-			return multi;
 		};
 		
 		this.initialize(obj, props);
@@ -219,7 +184,7 @@
 	 */
 	p.initialize = function(obj, props) {
 		this.target = obj;
-		this._setProps(props);
+		this._setAllProps(props);
 		this._setUID();
 	};
 	
@@ -238,9 +203,8 @@
 				
 			// set the position on each property
 			for(prop in this._changeProps) {
-				var p = this._changeProps[prop],
-					val = p.prefix+(this.getPosition(elapsed, p)*p.multiplier)+p.suffix;
-				this.target.style[prop] = val;
+				var p = this._changeProps[prop];
+				this.target.style[prop] = p.val.replace("%n%", (this.getPosition(elapsed, p)*p.multiplier));
 			}
 			
 			if(elapsed > this._duration) {
@@ -335,18 +299,6 @@
 		return this;
 	};
 	
-	/** 
-	 * destroy
-	 * Stops the animation and removes all
-	 * references from possible listeners
-	 */
-	p.destroy = function() {
-		this.stop();
-		this.target.removeAttribute("data-tweenId");
-		SimpleSynchro.removeListener(this);
-		SimpleTween.TWEENS.splice(this.uid, 1);
-	};
-	
 	/**
 	 * pause
 	 * Pauses the animation
@@ -411,24 +363,41 @@
 	
 	/**
 	 * registerExtension
-	 * Adds an extension to the SimpleTween array.
+	 * Adds an extension to the SimpleTween._extensions array.
+	 * Tests each parameter and splices out all the other options.
 	 * Extensions are simply an object defining how the 
 	 * css property value should be rendered.
 	 * Checks if the extension exists and removes it if it does
 	 * @param {Object} ext - the extension to add
+	 * @return {Boolean} true if extension was added
 	 */
 	SimpleTween.registerExtension = function(ext) {
-		if(typeof ext !== 'object') {
+		if(typeof ext !== 'object' || ext.alts === undefined) {
 			throw "Please register a valid extension";
 		};
 		SimpleTween.removeExtension(ext);
-		SimpleTween._extensions.push(ext);
+		
+		for(var i = 0, len = ext.alts.length; i < len; i++){
+			if(SimpleTween._test(ext.alts[i])) {
+				var ext_name = ext.alts.splice(i, 1),
+					ext_val = ext.val.splice(i, 1),
+					ext_multi = (ext.multiplier !== undefined) ? ext.multiplier.splice(i, 1) : [1];
+				ext.alts = ext_name[0];
+				ext.val = ext_val[0];
+				ext.multiplier = ext_multi[0];
+				SimpleTween._extensions.push(ext);
+				return true;
+			} 
+		}
+		
+		throw "All tests have failed. The browser doesn't support the '"+ext.name+"' extension";
 	};
 	
 	/**
 	 * removeExtension
 	 * Removes the extension from the array
 	 * @param {Object} ext - the extension to remove
+	 * @return {Boolean} true if the extensions was removed, false for failure
 	 */
 	SimpleTween.removeExtension = function(ext) {
 		if (SimpleTween._extensions == []) { return; }
@@ -436,7 +405,10 @@
 
 		if (index != -1) {
 			SimpleTween._extensions.splice(index, 1);
-		}
+			return true;
+		};
+		
+		return false;
 	};
 
 	
@@ -475,26 +447,7 @@
 
 		return false;
 	};
-	
-	/**
-	 * @private
-	 * _removeSuffix
-	 * Removes the suffix string from a value
-	 * @param {String} value - the value to remove the suffix from
-	 * @param {String} suffix - the suffix string to remove
-	 * @return {Number} the value without the suffix
-	 */
-	SimpleTween._removeSuffix = function(value, suffix) {
-		//console.log("value: ",value);
-		var num = 0;
-		if(value != '' && suffix != ' ') {
-			num = value.substring(0, value.indexOf(suffix))
-		} else {
-			num = value;
-		}
-		return Number(num);
-	};
-	
+
 	/**
 	 * test
 	 * Tests the browser for a style.
@@ -504,9 +457,9 @@
 	 */
 	SimpleTween._test = function(style) {
 		var test = document.body;
-		if(typeof test.style[style] == "string") {
+		if(typeof test.style[style] != "undefined") {
 			return true;
-		} 
+		};
 	};
 	
 	SimpleTween._extensions =[];
