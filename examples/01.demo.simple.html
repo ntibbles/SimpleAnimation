@@ -11,10 +11,10 @@
 
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<script type="text/javascript" src="../libs/Easing.js"></script>
-		<script type="text/javascript" src="../libs/SimpleSynchro.js"></script>
-		<script type="text/javascript" src="../libs/SimpleTween.js"></script>
-		<script type="text/javascript" src="../libs/SimpleTimeline.js"></script>
+		<script type="text/javascript" src="../src/Easing.js"></script>
+		<script type="text/javascript" src="../src/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../src/SimpleTween.js"></script>
+		<script type="text/javascript" src="../src/SimpleTimeline.js"></script>
 		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
 		
 		<style>
@@ -70,7 +70,7 @@
 		<script>
 			var tween1, cbHandler = {};
 			
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, top:100, width:200, height:200, opacity:1}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 10, {left: 100, top:100, width:200, height:200, opacity:1}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;
 			cbHandler.onStop = handleTweenStop;

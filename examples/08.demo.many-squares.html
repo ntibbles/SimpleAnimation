@@ -43,9 +43,9 @@
 				position:absolute;
 				background-color:#0000FF;
 				margin-bottom:2px;
-				opacity: 0.2;
+				/*opacity: 0.2;
 				filter: alpha(opacity=20);
-				/*-webkit-transform:rotate(45deg) skew(45deg); -moz-transform:rotate(45deg);*/
+				-webkit-transform:rotate(45deg) skew(45deg); -moz-transform:rotate(45deg);*/
 				
 			}
 			
@@ -60,59 +60,49 @@
 	</head>
 	<body>
 		<div>
-			<div id="container">
-				<div id="sqA" class="square"></div>
-			</div>
+			<div id="container"></div>
 			<div id="controls">
-				<input type="button" onclick="tween1.start();" value="start()">
+				<input type="button" onclick="tl.start();" value="start()">
 				<input type="button" onclick="tween1.pause();" value="pause()">
 				<div id="status">stopped</div>
 			</div>
 		</div>
 		<script>
-			var tween1, cbHandler = {};
+			var tween1, cols = 15, rows = 15, tl = new SimpleTimeline();
+			
+			for(var i = 0; i < rows; i++){
+				for(var j = 0; j < cols; j++) {
+					var el = document.createElement("div");
+					el.className = "square";
+					el.id = "sq"+i+"_"+j;
+					el.style.left = i * 30 + "px";
+					el.style.top = j * 30 + "px";
+					el.style.backgroundColor = getRandomColor();
+					document.getElementById("container").appendChild(el);
+					tl.addTween(SimpleTween.to(document.getElementById("sq"+i+"_"+j), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, { delay: getRandomDelay(), ease: Easing.strongEaseOut, useJS:true}), 0);
+				}
+			};
+			
+			function getRandomColor() {
+			    var letters = '0123456789ABCDEF'.split('');
+			    var color = '#';
+			    for (var i = 0; i < 6; i++ ) {
+			        color += letters[Math.round(Math.random() * 15)];
+			    }
+			    return color;
+			};
+			
+			function getRandomDelay() {
+				return Math.ceil((Math.random() * 5)*100)/100;
+				//return Math.random() * 20;
+			}
+			
+			console.log("nodes: ",cols*rows);
 			
 			
 			// notice the 'rotate' parameter in the props object
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, {callback: cbHandler, ease: Easing.strongEaseOut, pause:true, useJS:false});
-			//tween2 = SimpleTween.to(document.getElementById('sqA'), 1, {rotate:45}, {ease: Easing.elasticEaseOut, pause:true});
-			cbHandler.onComplete = handleTweenComplete;
-			cbHandler.onStart = handleTweenStart;
-			cbHandler.onStop = handleTweenStop;
-			cbHandler.onPause = handleTweenPause;
-			cbHandler.onResume = handleTweenResume;
+			//tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, {callback: cbHandler, ease: Easing.strongEaseOut, pause:true, useJS:false});
 			
-			function handleTweenStart(evt) {
-				$("#status").html("started");
-			};
-			
-			function handleTweenStop(evt) {
-				$("#status").html("stopped");
-			};
-			
-			function handleTweenPause(evt) {
-				$("#status").html("paused");
-			};
-			
-			function handleTweenResume(evt) {
-				$("#status").html("resumed");
-			};
-			
-			function handleTweenComplete(evt) {
-				$("#status").html("completed");
-				
-				var complete = {
-					onComplete: function() {
-						SimpleTween.to(document.getElementById('sqA'), 2, { left:220, transform: { rotate:360 } }, {ease: Easing.strongEaseOut});
-					}
-				}
-				SimpleTween.to(document.getElementById('sqA'), 2, { left:0, transform: { rotate:-180 }  }, { ease: Easing.strongEaseOut, callback: complete });
-				
-			};
-			
-			function triggerHandler(evt) {
-				$("#status").html("triggered");
-			};
 		</script>
 	</body>
 </html>

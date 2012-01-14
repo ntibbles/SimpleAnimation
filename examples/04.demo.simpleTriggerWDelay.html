@@ -11,9 +11,9 @@
 		
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<script type="text/javascript" src="../libs/Easing.js"></script>
-		<script type="text/javascript" src="../libs/SimpleSynchro.js"></script>
-		<script type="text/javascript" src="../libs/SimpleTween.js"></script>
+		<script type="text/javascript" src="../src/Easing.js"></script>
+		<script type="text/javascript" src="../src/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../src/SimpleTween.js"></script>
 		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
 
 		<style>
@@ -79,7 +79,7 @@
 		<script>
 			var tween1, tween2, cbHandler = {};
 			
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 3, { left: 100, top:100 }, { delay: 1, callback: cbHandler, trigger: {callback: triggerHandler, top: 50}, ease: Easing.backEaseOut, pause:true });
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 3, { left: 100, top:100 }, { delay: 1, callback: cbHandler, trigger: {callback: triggerHandler, top: 90}, ease: Easing.backEaseOut, pause:true });
 			tween2 = SimpleTween.to(document.getElementById('sqB'), 2, { left: 300, top:100 }, { ease: Easing.backEaseOut, pause: true, trigger: {callback: trigger2Handler, left: 310} });
 			
 			cbHandler.onComplete = handleTweenComplete;

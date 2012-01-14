@@ -11,10 +11,10 @@
 	
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<script type="text/javascript" src="../libs/Easing.js"></script>
-		<script type="text/javascript" src="../libs/SimpleSynchro.js"></script>
-		<script type="text/javascript" src="../libs/SimpleTween.js"></script>
-		<script type="text/javascript" src="../libs/SimpleTimeline.js"></script>
+		<script type="text/javascript" src="../src/Easing.js"></script>
+		<script type="text/javascript" src="../src/SimpleSynchro.js"></script>
+		<script type="text/javascript" src="../src/SimpleTween.js"></script>
+		<script type="text/javascript" src="../src/SimpleTimeline.js"></script>
 		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
 
 		<style>
@@ -65,9 +65,9 @@
 		</div>
 		<script>
 			$("#sqA").mouseover(function(evt) {
-				SimpleTween.to($(this)[0], 1, {width:100, height:100}, {ease: Easing.strongEaseOut});
+				SimpleTween.to($(this)[0], 1, {width:100, height:100, top:25, left:25}, {ease: Easing.strongEaseOut});
 			}).mouseout(function(evt) {
-				SimpleTween.to($(this)[0], 1, {width:25, height:25}, {ease: Easing.strongEaseOut});
+				SimpleTween.to($(this)[0], 1, {width:25, height:25, top:50, left:50}, {ease: Easing.strongEaseOut});
 			});
 			
 			
