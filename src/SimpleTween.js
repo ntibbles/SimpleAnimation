@@ -41,7 +41,7 @@
 		if(!SimpleSynchro) throw "The SimpleSynchro.js script is required to run SimpleTween";
 		
 		this.isPaused = false;
-		this.useJS = options.useJS || true;
+		this.useJS = options.useJS || true; // flag to use use js
 		
 		// private properties
 		this._css = false;
