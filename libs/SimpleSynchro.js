@@ -81,6 +81,12 @@
 	 */
 	SimpleSynchro.FPS = 100;
 	
+	/**
+	 * Results from the feature support
+	 * testing
+	 * @type {object}
+	 */
+	SimpleSynchro.results = [];
 	
 	/**
 	 * addListener
@@ -138,20 +144,6 @@
 		return "[object SimpleSynchro]";
 	};
 
-	
-	/**
-	 * @private
-	 * REMOVED FOR EXTENSIONS --- 
-	 * _testOpacity
-	 * Tests if the browser supports opacity or filters
-	 * @return {String} "opacity" or "filter"
-	 
-	SimpleSynchro._testOpacity = function() {
-		var test = document.body;
-		return SimpleSynchro._tests["opacity"] = (typeof test.style.opacity !== 'undefined') ? 'opacity' : ((!!test.filters) ? 'filter' : 'none');
-	};
-	*/
-	
 	/**
 	 * @private
 	 * _getTime

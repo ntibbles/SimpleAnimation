@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.45b
+* Version 0.461b
 * 
 * usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
@@ -41,8 +41,10 @@
 		if(!SimpleSynchro) throw "The SimpleSynchro.js script is required to run SimpleTween";
 		
 		this.isPaused = false;
+		this.useJS = options.useJS || true;
 		
 		// private properties
+		this._css = false;
 		this._time = 0;
 		this._duration = duration;
 		this._curTime = 0;
@@ -59,15 +61,6 @@
 		this._delay = 0;
 		this._callback = null;
 	
-		// add the opacity_extension
-		var opacity = {
-			name: "opacity", 					// CSS name
-			alts: ["opacity","filter"],			// alternate name for browsers
-			val : ["%n%", "alpha(opacity=%n%)"],// string value
-			multiplier: [1, 100] 				// multiplier of value (optional)
-		}
-		SimpleTween.registerExtension(opacity);
-		
 		// check for options
 		if(options) {
 			this._trigger =  options.trigger || {};
@@ -75,6 +68,7 @@
 			this._delay =  options.delay || 0;
 			this._callback =  options.callback || null;
 			this.isPaused = options.pause || false;
+			this.data = options.data || {};
 		}
 		
 		// private methods
@@ -82,52 +76,82 @@
 		 * @private
 		 * _setProps
 		 * Sets all the props we're tweening in the changeProps array.
-		 * If there's an extension, adjust properties as needed
+		 * For curVal, test to see if we can tween it, if not, use the value
+		 * If there's an extension, adjust properties as needed.
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
-		this._setAllProps = function(o) {
+		this._setAllJSProps = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
 			for(prop in o) {
-				var ext = SimpleTween._getExtension(prop),
-					curVal = (SimpleTween._test(prop)) ? styles[prop].replace(/[A-Za-z$-]/g, "") : styles[ext.alts].replace(/[(=A-Za-z$-)]/g, ""),
+				var curVal = styles[prop] || "0",	
 					args = {
-						start: Number(curVal),
-						prop: prop,
-						end: o[prop]
+						start : Number(curVal.replace(/[A-Za-z$]/g, "")),
+						prop : SimpleTween.supports(prop),
+						end : o[prop],
+						val : SimpleTween._getPropValue(prop)
 					};
-				
-				// @FIXME get the actual position from matrix, not reset to 0
-				if(styles[ext.alts] !== undefined && styles[ext.alts].substr("matrix") != -1){
-					args.start = 0;
-				}
-				if(ext) {
-					var multi =  ext.multiplier || 1;
-							
-					if(ext.alts == "filter") {
-						// @FIXME need to get the value from ANY filter in IE
-						// try and get the current value of the opacity from IE
-						try { args.start = o.filters.alpha.opacity } catch(e) {};
+					
+				if(SimpleTween.supports(prop)) {
+					if(prop == "transform"){
+						var vals = [];
+						
+						for(key in o[prop]) {
+							vals.push(key + SimpleTween._getPropValue(key)); 
+							// prepend the matrix if transforming
+							args.val = (styles[args.prop] == "none") ? vals.join(" ") : styles[args.prop] +" "+ vals.join(" ");
+							args.end = o[prop][key];
+						}
 					};
-					if(ext.multiplier) {
-						args.start = args.start/ext.multiplier;
+				} else {
+					//Test failed, check for IE filters
+					if(prop == "opacity") {
+						args.prop = "filter";
+						args.val = "alpha(opacity=%n%)";
+						args.multiplier = 100;
+						args.start = args.start * args.multiplier;
+						args.end = args.end * args.multiplier;
 					};
-					args.prop = ext.alts;
-					args.val = ext.val;
-					args.multi = multi;
 				};
-				
 				this._setProp(args);
 			};
 		};
+		
+		this._setAllCSSProps = function(o) {
+			var styles = SimpleTween._getCurrentStyle(this.target),
+				args = {},
+				transProps = [];
+				
+				for(prop in o) {
+					var normalizedName = SimpleTween.supports(prop);
+					transProps.push(normalizedName);
+					args.start = 0;
+					args.prop = normalizedName;
+					args.end = o[prop];
+					args.val = SimpleTween._getPropValue(prop);
+					
+					this._setProp(args);
+				};
+				
+				this.target.style[SimpleTween.supports('transitionProperty')] = transProps.join(",");
+				this.target.style[SimpleTween.supports('transitionDuration')] = String(this._duration) + "s";
+				this.target.style[SimpleTween.supports('transitionTimingFunction')] = "cubic-bezier(0.175, 0.885, 0.320, 1.275)";
+		};
+		
+		this._startCSS = function() {
+				for(prop in this._changeProps) {
+					//console.log("name: ", prop," value: ",this._changeProps[prop]);
+					var p = this._changeProps[prop];
+					this.target.style[prop] = p.val.replace("%n%", p.end);
+				}
+		}
 		
 		/**
 		 * _setProp
 		 * Sets the individual variables on a property and
 		 * sets the triggers
-		 * @param {String} prop - The property to set
-		 * @param {Number} start - The start position of the prop
-		 * @param {Number} end - The end position of the prop
+		 * @param {Object} args - The properties to set
+		 * 		expects: start and end, optional multi and val
 		 */
 		this._setProp = function(args) { 
 			this._changeProps[args.prop] = {
@@ -135,6 +159,7 @@
 				end : args.end,
 				change : args.end - args.start,
 				multiplier : args.multi || 1,
+				isForward : (args.start < args.end) ? true : false,
 				val : args.val || "%n%px"
 			};
 
@@ -169,8 +194,9 @@
 		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.45b";
+	SimpleTween.VERSION = "0.461b";
 	SimpleTween.TWEENS = [];
+	SimpleTween._extensions =[];
 	
 	var p = SimpleTween.prototype;
 		// public properties
@@ -178,6 +204,7 @@
 		p.isPlaying = false;
 		p.isComplete = false;
 		p.uid = 0;
+		p.data = {};
 		SimpleSynchro = window.SimpleSynchro;
 	
 	/**
@@ -188,7 +215,13 @@
 	 */
 	p.initialize = function(obj, props) {
 		this.target = obj;
-		this._setAllProps(props);
+		this._css = SimpleTween.supports("transition");
+		if(this._css && !this.useJS) {
+			this._setAllCSSProps(props);
+		} else {
+			this._setAllJSProps(props);
+		}
+		
 		this._setUID();
 	};
 	
@@ -208,6 +241,7 @@
 			// set the position on each property
 			for(prop in this._changeProps) {
 				var p = this._changeProps[prop];
+			
 				this.target.style[prop] = p.val.replace("%n%", (this.getPosition(elapsed, p)*p.multiplier));
 			}
 			
@@ -270,7 +304,7 @@
 	 * @returns {Boolean} true if we're past the trigger point, otherwise false
 	 */
 	p.checkTrigger = function(pos, prop) {
-		if(prop.start < prop.end) { 
+		if(prop.isForward) { 
 			if(pos > prop.trigger) return true;
 		} else {
 			if(pos < prop.trigger) return true;
@@ -283,7 +317,12 @@
 	 * Starts the animation running
 	 */
 	p.start = function() {
-		this._time = SimpleSynchro.getTime() + this._delay;
+		if(!this._css || this.useJS) {
+			//console.log("play");
+			this._time = SimpleSynchro.getTime() + this._delay;
+		} else {
+			this._startCSS();
+		}
 		this._totalTime = this._time + this._duration;
 		this.isPlaying = true;
 		this.isPaused = false;
@@ -333,7 +372,7 @@
 	
 	/**
 	 * getElapsedTime
-	 * Gets the total elapsed time this aniamtion has run
+	 * Gets the total elapsed time this animation has run
 	 */
 	p.getElapsedTime = function() {
 		return (SimpleSynchro.getTime() - this._time) - this._pausedTime.end;
@@ -366,56 +405,31 @@
 	};
 	
 	/**
-	 * registerExtension
-	 * Adds an extension to the SimpleTween._extensions array.
-	 * Tests each parameter and splices out all the other options.
-	 * Extensions are simply an object defining how the 
-	 * css property value should be rendered.
-	 * Checks if the extension exists and removes it if it does
-	 * @param {Object} ext - the extension to add
-	 * @return {Boolean} true if extension was added
+	 * Modified from:
+	 * Jeffrey Way
+	 * http://net.tutsplus.com/tutorials/html-css-techniques/quick-tip-detect-css-support-in-browsers-with-javascript/
 	 */
-	SimpleTween.registerExtension = function(ext) {
-		if(typeof ext !== 'object' || ext.alts === undefined) {
-			throw "Please register a valid extension";
+	SimpleTween.supports = (function() {  
+		var el = document.createElement("div"), 
+			vendors = 'Webkit ms o Moz'.split(' ');
+		
+		return function(prop) {
+			if( prop in el.style) {
+				return prop;
+			}
+			
+			prop = prop.replace(/^[a-z]/, function(val) {
+				return val.toUpperCase();
+			});
+			
+			for(var i = 0, len = vendors.length; i < len; i++){
+				if(vendors[i] + prop in el.style) {
+					return vendors[i] + prop;
+				}
+			}
+			return false;
 		};
-		SimpleTween.removeExtension(ext);
-		
-		for(var i = 0, len = ext.alts.length; i < len; i++){
-			if(SimpleTween._test(ext.alts[i])) {
-				var ext_name = ext.alts.splice(i, 1),
-					ext_val = ext.val.splice(i, 1),
-					ext_multi = (ext.multiplier !== undefined) ? ext.multiplier.splice(i, 1) : [1];
-				ext.alts = ext_name[0];
-				ext.val = ext_val[0];
-				ext.multiplier = ext_multi[0];
-				SimpleTween._extensions.push(ext);
-				return true;
-			} 
-		}
-		
-		throw "All tests have failed. The browser doesn't support the '"+ext.name+"' extension";
-	};
-	
-	/**
-	 * removeExtension
-	 * Removes the extension from the array
-	 * @param {Object} ext - the extension to remove
-	 * @return {Boolean} true if the extensions was removed, false for failure
-	 */
-	SimpleTween.removeExtension = function(ext) {
-		if (SimpleTween._extensions == []) { return; }
-		var index = SimpleTween._extensions.indexOf(ext);
-		//console.log("remove extension: ",index);
-		// @FIXME not removing duplicates
-		if (index != -1) {
-			SimpleTween._extensions.splice(index, 1);
-			return true;
-		};
-		
-		return false;
-	};
-
+	}());
 	
 	// private static methods
 	/**
@@ -426,7 +440,7 @@
 	 * @returns {String} A string with the current value
 	 */
 	SimpleTween._getCurrentStyle = function(obj) {
-	  	var computedStyle;
+		var computedStyle;
 	  	if (typeof obj.currentStyle != 'undefined') { 
 	 		computedStyle = obj.currentStyle; 
 		} else { 
@@ -436,38 +450,23 @@
 	  	return computedStyle;
 	};
 	
-	/**
-	* @private
-	* _getExtension
-	* Checks for an extension by it's name and returns it or false
-	* @param {String} name - the name to look for in the extensions array
-	* @return {Boolean/Object} - false if it doesn't exist, the object if it does
-	*/
-	SimpleTween._getExtension = function(name) {
-		for(var i = 0, len = SimpleTween._extensions.length; i < len; i++) {
-			if(SimpleTween._extensions[i]['name'] == name) {
-				return SimpleTween._extensions[i];
-			}
-		}
-
-		return false;
-	};
-
-	/**
-	 * test
-	 * Tests the browser for a style.
-	 * Known styles across browsers return the style.
-	 * @param {String} style - the style to test for
-	 * @return {String} The correct string for the corresponding style
-	 */
-	SimpleTween._test = function(style) {
-		var test = document.body;
-		if(typeof test.style[style] != "undefined") {
-			return true;
-		};
-	};
 	
-	SimpleTween._extensions =[];
+	SimpleTween._getPropValue = function(prop) {
+		switch(prop) {
+			case "opacity":
+				return "%n%";
+				break;
+			case "skew":
+			case "rotate":
+				return "(%n%deg)";
+				break;
+			case "scale":
+				return "(%n%)";
+				break;
+			default:
+				return "%n%px";
+		}
+	};
 	
 	window.SimpleTween = SimpleTween;
 }(window, document, undefined))

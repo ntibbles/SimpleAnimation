@@ -1,5 +1,9 @@
 # SimpleAnimation
 
+## Gospel
+
+The grand plan of the SimpleAnimation library is to try and make animation as easy as it would be in Flash. (Flash being the grandfather of browser animations). That being the case, this library as of version 0.4, is still in a state of flux. The syntax should remain the same, and keep in mind there's alternate, jQuery like syntax if you look at the code closely), but how it works internally may change until the 1.0 release, which is scheduled for mid 2012. Hope you like this and can contirbute to it! 
+
 ## Overview
 
 The SimpleAnimation library is designed to make complex JavaScript animations, simple. It's syntax is inspired from TweenLite (an AS3 library), but that's where the similarity ends.
@@ -62,6 +66,7 @@ SimpleTimeline is used to sequence multiple SimpleTweens. With SimpleTimeline yo
 
 Below are proposed updates and changes to the library
 
++ Use CSS3 transitions as primary tween and fallback/integrate JS functionality
 + Add a reverse method to SimpleTween and SimpleTimeline
 + Add nested timelines
 + CSS3 Transforms for rotation and scale

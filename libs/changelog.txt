@@ -1,4 +1,16 @@
 SimpleTween - 
+0.461b (01-13-12)
+	- Introduced CSS tweening (in the code, but not accessed yet)
+	- Removed extensions for native support (I know quick change ;)
+	- Added more robust property testing
+	- Bug fixes
+
+0.451b (01-09-12)
+	- BUG FIX - fixed issue with getting values with negative numbers
+
+0.45b (01-08-12)
+	- BUG FIX - fixed issue with transform on additional tween creations
+
 0.44b (01-07-12)
 	- Added extensions
 	- Optimized and removed methods 
