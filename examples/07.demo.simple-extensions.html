@@ -37,8 +37,8 @@
 			.square {
 				top:10px;
 				left:10px;
-				width:25px;
-				height:25px;
+				width:250px;
+				height:250px;
 				border:1px solid #000;
 				position:absolute;
 				background-color:#0000FF;
@@ -47,6 +47,10 @@
 				filter: alpha(opacity=20);
 				/*-webkit-transform:rotate(45deg) skew(45deg); -moz-transform:rotate(45deg);*/
 				
+			}
+			
+			.endOp {
+				opacity:1;
 			}
 			
 			#status {
@@ -74,8 +78,8 @@
 			
 			
 			// notice the 'rotate' parameter in the props object
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, {callback: cbHandler, ease: Easing.strongEaseOut, pause:true, useJS:false});
-			//tween2 = SimpleTween.to(document.getElementById('sqA'), 1, {rotate:45}, {ease: Easing.elasticEaseOut, pause:true});
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 5, { opacity:1 }, {callback: cbHandler, ease: Easing.backEaseOut, pause:true});
+			
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;
 			cbHandler.onStop = handleTweenStop;
@@ -103,10 +107,10 @@
 				
 				var complete = {
 					onComplete: function() {
-						SimpleTween.to(document.getElementById('sqA'), 2, { left:220, transform: { rotate:360 } }, {ease: Easing.strongEaseOut});
+						SimpleTween.to(document.getElementById('sqA'), 2, { left:220, transform: { rotate:405 } }, {ease: Easing.strongEaseOut});
 					}
 				}
-				SimpleTween.to(document.getElementById('sqA'), 2, { left:0, transform: { rotate:-180 }  }, { ease: Easing.strongEaseOut, callback: complete });
+				SimpleTween.to(document.getElementById('sqA'), 2, { left:0, transform: { rotate:-225 }  }, { ease: Easing.strongEaseOut, callback: complete });
 				
 			};
 			

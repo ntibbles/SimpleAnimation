@@ -79,8 +79,8 @@
 		<script>
 			var tween1, tween2, cbHandler = {};
 			
-			tween1 = SimpleTween.to(document.getElementById('sqA'), 3, { left: 100, top:100 }, { delay: 1, callback: cbHandler, trigger: {callback: triggerHandler, top: 90}, ease: Easing.backEaseOut, pause:true });
-			tween2 = SimpleTween.to(document.getElementById('sqB'), 2, { left: 300, top:100 }, { ease: Easing.backEaseOut, pause: true, trigger: {callback: trigger2Handler, left: 310} });
+			tween1 = SimpleTween.to(document.getElementById('sqA'), 3, { left: 100, top:100 }, { delay: 1, callback: cbHandler, trigger: {callback: triggerHandler, top: 50}, ease: Easing.backEaseOut, pause:true, useJS:false });
+			tween2 = SimpleTween.to(document.getElementById('sqB'), 2, { left: 300, top:100 }, { ease: Easing.backEaseOut, pause: true, trigger: {callback: trigger2Handler, left: 310}, useJS:false });
 			
 			cbHandler.onComplete = handleTweenComplete;
 			cbHandler.onStart = handleTweenStart;

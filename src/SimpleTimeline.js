@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.4b
+* Version 0.41b
 * 
 * usage:
 * timeline = new SimpleTimeline();
@@ -71,6 +71,7 @@
 		};
 		
 		/**
+		 * @private
 		 * _getTweenGroup
 		 * @param (Number) sec - the second (array index) the gets the tweens from
 		 * @returns The array of tweens at the specified time
@@ -78,10 +79,24 @@
 		this._getTweenGroup = function(sec) {
 			return this._tweens[sec] || null;
 		};
+		
+		/**
+		 * @private
+		 * _handleTimelineComplete
+		 * Calls a callback (if exists) and removes itself
+		 * from SimpleSynchro
+		 */
+		this._handleTimelineComplete = function() {
+			if(this._callback) this._callback.call(this);
+			
+			SimpleSynchro.removeListener(this);
+			this.isPlaying = false;
+		};
+	
 	
 	};
 	
-	SimpleTimeline.VERSION = "0.4b";
+	SimpleTimeline.VERSION = "0.41b";
 	
 	var SimpleSynchro = window.SimpleSynchro,
 		p = SimpleTimeline.prototype;
@@ -115,20 +130,14 @@
 				} 
 			}
 		};
-		
-		if(curSec >= this._tweens.length && curTime > this._curTween.time && !this._curTween.isPlaying) {
-			if(this._callback) this._callback.call(this);
-		
-			SimpleSynchro.removeListener(this);
-			this.isPlaying = false;
-		};
 
 		this._sec = curSec;
 	};
 	
 	/**
 	 * addTween
-	 * Adds a tween to the timeline at the specified time.
+	 * Adds a tween to the timeline at the specified time,
+	 * and creates the complete handler on the last tween.
 	 * @param {SimpleTween} tween - the tween to add
 	 * @param {Number} time - the time at which to call the tween
 	 */
@@ -141,9 +150,11 @@
 	 * Starts the timeline
 	 */
 	p.start = function() {
+		var me = this;
 		if(!this.isPlaying) {
 			this.isPlaying = true;
 			this._startTime = SimpleSynchro.getTime();
+			this._tweens[this._tweens.length-1][0]._callback = { onComplete: function() { me._handleTimelineComplete() } };
 			SimpleSynchro.addListener(this);
 		}
 	};

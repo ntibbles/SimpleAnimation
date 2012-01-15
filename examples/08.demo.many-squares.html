@@ -43,10 +43,7 @@
 				position:absolute;
 				background-color:#0000FF;
 				margin-bottom:2px;
-				/*opacity: 0.2;
 				filter: alpha(opacity=20);
-				-webkit-transform:rotate(45deg) skew(45deg); -moz-transform:rotate(45deg);*/
-				
 			}
 			
 			#status {
@@ -68,7 +65,7 @@
 			</div>
 		</div>
 		<script>
-			var tween1, cols = 15, rows = 15, tl = new SimpleTimeline();
+			var tween1, cols = 10, rows = 10, tl = new SimpleTimeline();
 			
 			for(var i = 0; i < rows; i++){
 				for(var j = 0; j < cols; j++) {
@@ -79,7 +76,7 @@
 					el.style.top = j * 30 + "px";
 					el.style.backgroundColor = getRandomColor();
 					document.getElementById("container").appendChild(el);
-					tl.addTween(SimpleTween.to(document.getElementById("sq"+i+"_"+j), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, { delay: getRandomDelay(), ease: Easing.strongEaseOut, useJS:true}), 0);
+					tl.addTween(SimpleTween.to(document.getElementById("sq"+i+"_"+j), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: getRandomRotation() } }, { delay: getRandomDelay(), ease: Easing.strongEaseOut }), 0);
 				}
 			};
 			
@@ -92,17 +89,15 @@
 			    return color;
 			};
 			
-			function getRandomDelay() {
-				return Math.ceil((Math.random() * 5)*100)/100;
-				//return Math.random() * 20;
+			function getRandomRotation() {
+				return Math.ceil((Math.random() * 405)*100)/100;
 			}
 			
-			console.log("nodes: ",cols*rows);
+			function getRandomDelay() {
+				return Math.ceil((Math.random() * 5)*100)/100;
+			}
 			
-			
-			// notice the 'rotate' parameter in the props object
-			//tween1 = SimpleTween.to(document.getElementById('sqA'), 5, {left: 100, width:200, height:200, top: 100, opacity:1, transform: { rotate: 405 } }, {callback: cbHandler, ease: Easing.strongEaseOut, pause:true, useJS:false});
-			
+			//console.log("nodes: ",cols*rows);
 		</script>
 	</body>
 </html>

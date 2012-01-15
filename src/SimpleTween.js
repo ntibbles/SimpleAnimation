@@ -5,7 +5,7 @@
 * 
 * Copyright (c) 2011 Noel Tibbles (noel.tibbles.ca)
 * 
-* Version 0.461b
+* Version 0.471b
 * 
 * usage:
 * SimpleTween.to(document.getElementById('sqA'), 2, {left: 100, top:100, width: 200, height:200}, {callback: cbHandler, ease: Easing.elasticEaseOut, pause:true});
@@ -25,23 +25,12 @@
 **/
 
 (function(window, document, undefined){
-	/**
-	 * Checks if an Easing object exists and 
-	 * sets the default easing if not.
-	 */
-	if(!window.Easing) {
-		Easing = {
-			linear : function (t, b, c, d) { 
-				return c*t/d + b; 
-			}
-		};
-	};
-	
+
 	SimpleTween = function(obj, duration, props, options) {
 		if(!SimpleSynchro) throw "The SimpleSynchro.js script is required to run SimpleTween";
 		
 		this.isPaused = false;
-		this.useJS = options.useJS || true; // flag to use use js
+		this.useJS = options.useJS || false; // flag to use js
 		
 		// private properties
 		this._css = false;
@@ -53,18 +42,19 @@
 			start: 0,
 			end: 0
 		};
-		this._totalTime = 0;
+		this.props = props;
 		this._changeProps = {};
 		this._triggers = 0;
-		this._ease = Easing.linear;
+		this._ease = function (t, b, c, d) { return c*t/d + b };
 		this._trigger = {};
 		this._delay = 0;
 		this._callback = null;
+		this._isRunning = false; // used to check if the CSS has started
 	
 		// check for options
 		if(options) {
 			this._trigger =  options.trigger || {};
-			this._ease = options.ease || Easing.linear;
+			this._ease = options.ease || function (t, b, c, d) { return c*t/d + b };
 			this._delay =  options.delay || 0;
 			this._callback =  options.callback || null;
 			this.isPaused = options.pause || false;
@@ -75,24 +65,26 @@
 		/**
 		 * @private
 		 * _setProps
-		 * Sets all the props we're tweening in the changeProps array.
-		 * For curVal, test to see if we can tween it, if not, use the value
-		 * If there's an extension, adjust properties as needed.
+		 * Sets all the props we're tweening in the changeProps array by
+		 * getting vendor specific names and the current value for the property.
+		 * For transform properties, make adjustments by adding the matrix (if it exists)
+		 * and looping through the transform object.
 		 * @param {Object} o - The object with the properties we're tweening
 		 */
-		this._setAllJSProps = function(o) {
+		this._initializeJS = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target);
 			
 			for(prop in o) {
-				var curVal = styles[prop] || "0",	
+				var curVal = styles[prop] || "0",
+					normalizedName = SimpleTween.getNormalizedName(prop),
 					args = {
 						start : Number(curVal.replace(/[A-Za-z$]/g, "")),
-						prop : SimpleTween.supports(prop),
+						prop : normalizedName,
 						end : o[prop],
 						val : SimpleTween._getPropValue(prop)
 					};
 					
-				if(SimpleTween.supports(prop)) {
+				if(normalizedName) {
 					if(prop == "transform"){
 						var vals = [];
 						
@@ -117,34 +109,68 @@
 			};
 		};
 		
-		this._setAllCSSProps = function(o) {
+		/**
+		 * @private
+		 * _initializeCSS
+		 * Initializes all the CSS properties
+		 * @see this._initializeJS
+		 * @param {Object} o - The object with the properties we're tweening
+		 */
+		this._initializeCSS = function(o) {
 			var styles = SimpleTween._getCurrentStyle(this.target),
 				args = {},
 				transProps = [];
 				
 				for(prop in o) {
-					var normalizedName = SimpleTween.supports(prop);
-					transProps.push(normalizedName);
-					args.start = 0;
+					var normalizedName = SimpleTween.getNormalizedName(prop),
+						curVal = styles[prop] || "0";
+				
+					args.start = Number(curVal.replace(/[A-Za-z$]/g, ""));
 					args.prop = normalizedName;
 					args.end = o[prop];
 					args.val = SimpleTween._getPropValue(prop);
 					
-					this._setProp(args);
+					transProps.push(SimpleTween._getCSSName(normalizedName, args.val));
+					
+					if(prop == "transform"){
+						var vals = [];
+						
+						for(key in o[prop]) {
+							vals.push(key + SimpleTween._getPropValue(key)); 
+							args.val = vals.join(" "); // adding the matrix causes unexpected results
+							args.end = o[prop][key];
+						}
+					}
+					
+					this._setProp(args);			
 				};
 				
-				this.target.style[SimpleTween.supports('transitionProperty')] = transProps.join(",");
-				this.target.style[SimpleTween.supports('transitionDuration')] = String(this._duration) + "s";
-				this.target.style[SimpleTween.supports('transitionTimingFunction')] = "cubic-bezier(0.175, 0.885, 0.320, 1.275)";
+				var transProp = SimpleTween.getNormalizedName('transitionProperty'),
+					transDur = SimpleTween.getNormalizedName('transitionDuration'),
+					transFunc = SimpleTween.getNormalizedName('transitionTimingFunction');
+				
+				// reset in case we're tweening the same object again
+				this.target.style[transProp] = null;
+				this.target.style[transDur] = null;
+				this.target.style[transFunc] = null;
+				
+				this.target.style[transProp] = transProps.join(", ");
+				this.target.style[transDur] = String(this._duration) + "s";
+				this.target.style[transFunc] = this._ease;
 		};
 		
 		this._startCSS = function() {
-				for(prop in this._changeProps) {
-					//console.log("name: ", prop," value: ",this._changeProps[prop]);
-					var p = this._changeProps[prop];
-					this.target.style[prop] = p.val.replace("%n%", p.end);
-				}
-		}
+			if(this._isRunning) return;
+			
+			for(prop in this._changeProps) {
+				var p = this._changeProps[prop];
+				this.target.style[prop] = p.val.replace("%n%", p.end);
+			}
+			
+			this._isRunning = true;
+		};
+		
+		
 		
 		/**
 		 * _setProp
@@ -180,7 +206,7 @@
 			var curUID = this.target.getAttribute("data-tweenId");
 			if(curUID != null) {
 				SimpleSynchro.removeListener(SimpleTween.getTweenByUID(curUID).stop());
-			}
+			};
 
 			this.uid = SimpleTween.TWEENS.push(this) - 1;
 			this.target.setAttribute("data-tweenId", this.uid);
@@ -191,12 +217,10 @@
 		// add to the SimpleSynchro
 		SimpleSynchro.addListener(this);
 		
-		if(!this.isPaused) this.start();
 	}
 	
-	SimpleTween.VERSION = "0.461b";
+	SimpleTween.VERSION = "0.471b";
 	SimpleTween.TWEENS = [];
-	SimpleTween._extensions =[];
 	
 	var p = SimpleTween.prototype;
 		// public properties
@@ -215,14 +239,16 @@
 	 */
 	p.initialize = function(obj, props) {
 		this.target = obj;
-		this._css = SimpleTween.supports("transition");
+		this._css = SimpleTween.getNormalizedName("transition");
 		if(this._css && !this.useJS) {
-			this._setAllCSSProps(props);
+			this._initializeCSS(props);
 		} else {
-			this._setAllJSProps(props);
-		}
-		
+			this._initializeJS(props);
+			this.useJS = true;
+		} 
 		this._setUID();
+		
+		if(!this.isPaused) this.start();
 	};
 	
 	/**
@@ -237,19 +263,25 @@
 			var elapsed = time - this._time - this._pausedTime.end;
 			
 			if(elapsed < 0) return;
-				
-			// set the position on each property
-			for(prop in this._changeProps) {
-				var p = this._changeProps[prop];
-			
-				this.target.style[prop] = p.val.replace("%n%", (this.getPosition(elapsed, p)*p.multiplier));
-			}
 			
 			if(elapsed > this._duration) {
+				this._isRunning = false;
 				this.isPlaying = false;
 				this.isComplete = true;
 				this.target.removeAttribute("data-tweenId");
 				this.dispatch("onComplete");
+			}
+
+			if(elapsed > this._delay && (this._css && !this.useJS)) {
+				this._startCSS();
+				return;
+			}
+			
+			// set the position on each property
+			for(prop in this._changeProps) {
+				var p = this._changeProps[prop];
+					
+				this.target.style[prop] = p.val.replace("%n%", (this.getPosition(elapsed, p, prop)*p.multiplier));
 			}
 		}
 	};
@@ -281,15 +313,21 @@
 	 * @param {Number} t - the time (used for easing)
 	 * @param {Object} prop - the prop object with the start, change and trigger values
 	 */
-	p.getPosition = function(t, prop){
-		var pos = Math.round(this._ease(t, prop.start, prop.change, this._duration)*100)/100;
+	p.getPosition = function(t, obj, prop){
+		var styles = SimpleTween._getCurrentStyle(this.target),
+			pos = styles[prop]; 
+			
+		// JS trigger
+		if(!this._css || this.useJS) {
+			pos = Math.round(this._ease(t, obj.start, obj.change, this._duration)*100)/100;
+		}
 		
-		if(prop.trigger && this.checkTrigger(pos, prop)) {
+		if(obj.trigger && this.checkTrigger(pos, obj)) {
 			this._triggers--;
 			if(this._triggers == 0) {
 				this._trigger.callback.call(this, {target: this.target});
 			}
-			prop.trigger = null;
+			obj.trigger = null;
 		}
 		
 		return pos;
@@ -304,6 +342,8 @@
 	 * @returns {Boolean} true if we're past the trigger point, otherwise false
 	 */
 	p.checkTrigger = function(pos, prop) {
+		if(isNaN(pos)) pos = Number(pos.replace(/[A-Za-z$]/g, ""));
+		
 		if(prop.isForward) { 
 			if(pos > prop.trigger) return true;
 		} else {
@@ -317,13 +357,7 @@
 	 * Starts the animation running
 	 */
 	p.start = function() {
-		if(!this._css || this.useJS) {
-			//console.log("play");
-			this._time = SimpleSynchro.getTime() + this._delay;
-		} else {
-			this._startCSS();
-		}
-		this._totalTime = this._time + this._duration;
+		this._time = SimpleSynchro.getTime() + this._delay;
 		this.isPlaying = true;
 		this.isPaused = false;
 		this.dispatch("onStart");
@@ -349,12 +383,23 @@
 	p.pause = function() {
 		this.isPaused = !this.isPaused;
 		if(this.isPaused) {
+			if(this._css && !this.useJS) {
+				for(prop in this._changeProps) {
+					var p = this._changeProps[prop],
+					    styles = SimpleTween._getCurrentStyle(this.target);
+					this.target.style[prop] = styles[prop];
+					//console.log("p: ",p," prop: ",prop);
+				}
+			}
 			this._pausedTime.start = SimpleSynchro.getTime() - this._time;
 			this.dispatch("onPause");
 		} else {
+			if(this._css && !this.useJS) { 
+				this._initializeCSS(this.props);
+			}
 			this._pausedTime.end = (SimpleSynchro.getTime() - this._time) - this._pausedTime.start;
 			this.dispatch("onResume");
-		}
+		};
 		
 		return this;
 	};
@@ -366,7 +411,7 @@
 	 */
 	p.dispatch = function(evt) {
 		if(this._callback && this._callback[evt]) {
-			this._callback[evt].call(this, {type:evt, tween: this});
+			this._callback[evt]({type:evt, tween: this});
 		}; 
 	};
 	
@@ -409,9 +454,9 @@
 	 * Jeffrey Way
 	 * http://net.tutsplus.com/tutorials/html-css-techniques/quick-tip-detect-css-support-in-browsers-with-javascript/
 	 */
-	SimpleTween.supports = (function() {  
+	SimpleTween.getNormalizedName = (function() {  
 		var el = document.createElement("div"), 
-			vendors = 'Webkit ms o Moz'.split(' ');
+			vendors = ["Webkit", "ms", "o", "Moz"];
 		
 		return function(prop) {
 			if( prop in el.style) {
@@ -450,7 +495,33 @@
 	  	return computedStyle;
 	};
 	
+	/**
+	 * @private
+	 * _getCSSName
+	 * Creates an element in the DOM and extracts the correct
+	 * name based on vendor specific naming conventions
+	 * @return {String} the vendro specific CSS name
+	 */
+	SimpleTween._getCSSName = function(prop, val) {
+		var test = document.createElement("div");
+		test.style[prop] = val.replace("%n%", "0");
+		
+		if(prop.indexOf("Transform") != -1) {
+			test.style[prop] = "rotate(0deg)";
+		}
+		
+		var name = test.getAttribute("style");
+		return name.substr(0, name.indexOf(":"));
+	}
 	
+	/**
+	 * @private
+	 * _getPropValue
+	 * Gets the correct measurement value based
+	 * on the property
+	 * @param {String} prop - the property to get the value
+	 * @return {String} the correct value
+	 */
 	SimpleTween._getPropValue = function(prop) {
 		switch(prop) {
 			case "opacity":

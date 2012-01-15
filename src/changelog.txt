@@ -1,4 +1,8 @@
 SimpleTween - 
+0.471b (01-15-12)
+	- Finished CSS tweening. If the browser supports transitions, SimpleTween will use CSS to tween, or fallback to JS
+	- Bug fixes
+	
 0.461b (01-13-12)
 	- Introduced CSS tweening (in the code, but not accessed yet)
 	- Removed extensions for native support (I know quick change ;)
@@ -19,6 +23,12 @@ SimpleTween -
 	
 0.43b (01-06-12)
 	- Added opacity for IE7+
+	
+	
+SimpleTimeline -
+0.41b (01-15-12)
+	- Improved complete handling
+	- Modification to work with CSS tweens
 
 
 SimpleSynchro - 

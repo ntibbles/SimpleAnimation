@@ -109,12 +109,14 @@
 			 * (A 1px pad for the border)
 			 */
 			function completeHandler() {
+				
 				var target = document.getElementById(getRandomDiv()),
 					handler = {
 						onComplete: function() {
 							SimpleTween.to(target, 1, {backgroundPositionX:0, backgroundPositionY:0, width:799, height:599}, {ease: Easing.backEaseInOut });
 						}
 					};
+				console.log("complete: ",target);
 				
 				target.style.zIndex = 99;
 				SimpleTween.to(target, 1, {top:0, left:0}, {trigger: { left:50, callback: triggerHandler }, callback: handler, ease: Easing.strongEaseOut});
