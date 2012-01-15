@@ -66,7 +66,7 @@ SimpleTimeline is used to sequence multiple SimpleTweens. With SimpleTimeline yo
 
 Below are proposed updates and changes to the library
 
-+ Use CSS3 transitions as primary tween and fallback/integrate JS functionality
++ ~~Use CSS3 transitions as primary tween and fallback/integrate JS functionality~~ as of v.0471b
 + Add a reverse method to SimpleTween and SimpleTimeline
 + Add nested timelines
 + CSS3 Transforms for rotation and scale
