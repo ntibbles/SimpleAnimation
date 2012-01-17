@@ -25,7 +25,6 @@
 **/
 
 (function(window, document, undefined){
-
 	SimpleTween = function(obj, duration, props, options) {
 		if(!SimpleSynchro) throw "The SimpleSynchro.js script is required to run SimpleTween";
 		
@@ -98,8 +97,17 @@
 				} else {
 					//Test failed, check for IE filters
 					if(prop == "opacity") {
+						// check if target has a filter already
+						var curFilt = styles["filter"];
+
+						if(curFilt.indexOf("opacity") != -1) {
+							var str = curFilt.substring(0, curFilt.indexOf("alpha"));
+							curFilt = str + " alpha(opacity=%n%)";
+						} else {
+							curFilt = curFilt + " alpha(opacity=%n%)";
+						}
 						args.prop = "filter";
-						args.val = "alpha(opacity=%n%)";
+						args.val = curFilt;
 						args.multiplier = 100;
 						args.start = args.start * args.multiplier;
 						args.end = args.end * args.multiplier;
@@ -387,17 +395,21 @@
 				for(prop in this._changeProps) {
 					var p = this._changeProps[prop],
 					    styles = SimpleTween._getCurrentStyle(this.target);
+					    
 					this.target.style[prop] = styles[prop];
-					//console.log("p: ",p," prop: ",prop);
 				}
 			}
+			
 			this._pausedTime.start = SimpleSynchro.getTime() - this._time;
 			this.dispatch("onPause");
 		} else {
-			if(this._css && !this.useJS) { 
-				this._initializeCSS(this.props);
-			}
 			this._pausedTime.end = (SimpleSynchro.getTime() - this._time) - this._pausedTime.start;
+			
+			if(this._css && !this.useJS) { 
+				this._isRunning = false;
+				this._initializeCSS(this.props);
+			};
+			
 			this.dispatch("onResume");
 		};
 		
@@ -454,28 +466,26 @@
 	 * Jeffrey Way
 	 * http://net.tutsplus.com/tutorials/html-css-techniques/quick-tip-detect-css-support-in-browsers-with-javascript/
 	 */
-	SimpleTween.getNormalizedName = (function() {  
+	
+	SimpleTween.getNormalizedName = function(prop) {
 		var el = document.createElement("div"), 
 			vendors = ["Webkit", "ms", "o", "Moz"];
+
+		if( prop in el.style) {
+			return prop;
+		}
+		prop = prop.replace(/^[a-z]/, function(val) {
+			return val.toUpperCase();
+		});
 		
-		return function(prop) {
-			if( prop in el.style) {
-				return prop;
+		for(var i = 0, len = vendors.length; i < len; i++) {
+			if(vendors[i] + prop in el.style) {
+				return vendors[i] + prop;
 			}
-			
-			prop = prop.replace(/^[a-z]/, function(val) {
-				return val.toUpperCase();
-			});
-			
-			for(var i = 0, len = vendors.length; i < len; i++){
-				if(vendors[i] + prop in el.style) {
-					return vendors[i] + prop;
-				}
-			}
-			return false;
-		};
-	}());
-	
+		}
+		return false;
+	};
+
 	// private static methods
 	/**
 	 * @private
@@ -500,7 +510,7 @@
 	 * _getCSSName
 	 * Creates an element in the DOM and extracts the correct
 	 * name based on vendor specific naming conventions
-	 * @return {String} the vendro specific CSS name
+	 * @return {String} the vendor specific CSS name
 	 */
 	SimpleTween._getCSSName = function(prop, val) {
 		var test = document.createElement("div");
