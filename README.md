@@ -1,6 +1,6 @@
 # SimpleAnimation
 
-## Gospel
+## Preamble
 
 The grand plan of the SimpleAnimation library is to try and make animation as easy as it would be in Flash. (Flash being the grandfather of browser animations). That being the case, this library as of version 0.4, is still in a state of flux. The syntax should remain the same, and keep in mind there's alternate, jQuery like syntax if you look at the code closely), but how it works internally may change until the 1.0 release, which is scheduled for mid 2012. Hope you like this and can contirbute to it! 
 
