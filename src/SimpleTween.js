@@ -403,7 +403,7 @@
 			this._pausedTime.start = SimpleSynchro.getTime() - this._time;
 			this.dispatch("onPause");
 		} else {
-			this._pausedTime.end = (SimpleSynchro.getTime() - this._time) - this._pausedTime.start;
+			this._pausedTime.end += (SimpleSynchro.getTime() - this._time) - this._pausedTime.start;
 			
 			if(this._css && !this.useJS) { 
 				this._isRunning = false;
